@@ -1,4 +1,4 @@
-<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>body{margin:0}[hidden]{display:none!important}</style><title>دوام</title><meta name="description" content="محاكي حياة موظف ساخر: عشرة أيام عمل، إطلاق واحد، وناس كثير."><meta property="og:title" content="دوام"><meta property="og:description" content="محاكي حياة موظف ساخر: عشرة أيام عمل، إطلاق واحد، وناس كثير. العبها من الجوال."><meta name="theme-color" content="#0E1824"></head><body>
+<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>دوام</title><meta name="description" content="محاكي حياة موظف ساخر: مهندس أو موارد بشرية. عشرة أيام عمل، وناس كثير."><meta property="og:title" content="دوام"><meta property="og:description" content="محاكي حياة موظف ساخر. العب كمهندس أو كموظف موارد بشرية، من الجوال."><meta name="theme-color" content="#0E1824"><style>body{margin:0}[hidden]{display:none!important}</style></head><body>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@400;600;700;800&family=Rakkas&display=swap">
@@ -334,6 +334,25 @@ input { font: inherit; }
 @keyframes ringpulse { 0% { box-shadow: 0 0 0 0 #57C78C88; } 100% { box-shadow: 0 0 0 30px #57C78C00; } }
 @keyframes toast { 0% { transform: translate(-50%, -30px); opacity: 0; } 10%, 85% { transform: translate(-50%, 0); opacity: 1; } 100% { transform: translate(-50%, -20px); opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; } }
+/* stamp mini-game + HR inbox */
+.stamp-wrap { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; }
+.form-card { position: relative; width: min(300px, 86%); background: var(--sand); color: var(--sand-ink); border-radius: 6px; padding: 16px 18px; box-shadow: 0 10px 30px #0008; overflow: hidden; }
+.form-card.in { animation: slide-in .2s ease-out; } .form-card.out { transform: translateX(120%) rotate(8deg); transition: transform .16s ease-in; }
+.form-card h4 { margin: 0 0 2px; font-size: 19px; } .form-card .fn { font-size: 13px; color: #6B5D4A; margin-bottom: 10px; }
+.form-card .fr { display: flex; justify-content: space-between; border-top: 1px dashed var(--sand-line); padding: 6px 0; }
+.form-card .fr b.ok { color: #1F7A4D; } .form-card .fr b.bad { color: #B3263E; }
+.form-card .urgent { background: var(--bad); color: #fff; font-size: 12px; font-weight: 800; text-align: center; margin: -16px -18px 10px; padding: 4px; }
+.seal { position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%) rotate(-14deg); border: 4px solid; border-radius: 8px; padding: 0 14px; font-family: var(--display); font-size: 30px; animation: stamp .25s cubic-bezier(.2,1.6,.5,1); background: #F3E8D2cc; }
+.seal.y { color: #1F7A4D; } .seal.n { color: #B3263E; }
+.stamp-btns { display: flex; gap: 14px; width: min(300px, 86%); }
+.stamp-btns button { flex: 1; padding: 14px; border-radius: 14px; font-weight: 800; font-size: 17px; touch-action: manipulation; }
+.st-yes { background: var(--good); color: #062B18; box-shadow: 0 4px 0 #2A7A50; } .st-no { background: var(--bad); color: #fff; box-shadow: 0 4px 0 #8E2A3A; }
+.stamp-btns button:active { transform: translateY(3px); box-shadow: none; }
+.mode-pick { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.mode-pick button { background: #0E1824cc; border: 1.5px solid var(--line); border-radius: 16px; padding: 10px 12px; text-align: right; display: flex; flex-direction: column; gap: 2px; }
+.mode-pick button b { font-size: 15px; } .mode-pick button span { font-size: 12px; color: var(--muted); }
+.mode-pick button.on { border-color: var(--saffron); background: var(--panel2); }
+.mode-pick .new { display: inline-block; background: var(--bad); color: #fff; font-size: 10.5px; font-weight: 800; border-radius: 6px; padding: 0 6px; margin-inline-start: 6px; }
 
 </style>
 <div id="game"></div>
@@ -912,7 +931,8 @@ function where(id, d, s) {
     case "reem": return s === 0 ? "floor" : s === 1 ? "meeting" : s === 2 ? "floor" : ([3, 6, 8].includes(d) ? "cafe" : null);
     case "abunayef": return s < 2 ? "server" : null;
     case "richard": return RICH_DAYS.includes(d) && s < 2 ? "meeting" : null;
-    case "haya": return s < 2 ? "hr" : s === 2 ? (d % 2 ? "hr" : "kitchen") : null;
+    case "haya": return s < 2 ? "hr" : s === 2 ? (G.mode === "hr" || d % 2 ? "hr" : "kitchen") : null;
+    case "munira": if (G.mode !== "hr") return null; return s < 2 ? "bossoffice" : s === 2 ? "meeting" : null;
     case "yousef": return d < 2 || s > 2 ? null : s === 1 ? (d % 2 ? "kitchen" : "floor") : "floor";
   }
   return null;
@@ -981,6 +1001,8 @@ const ACH = {
   mom: ["بر الوالدين", "كلّمت الوالدة ٤ مرات"],
   explorer: ["فضولي", "اكتشفت ١٥ تفصيلة في المكاتب"],
   endings: ["المجموعة الكاملة", "شفت النهايات العشر كلها"],
+  stamp: ["ختم ذهبي", "ختمت ١٠ معاملات أو أكثر بدون غلطة"],
+  inbox: ["صندوق فاضي", "خلّصت يوم HR بدون طلبات معلّقة"],
 };
 
 /* what each person thinks about the others (unlocked by trust) */
@@ -1334,6 +1356,7 @@ const ENDS = {
 const END_ORDER = ["promotion", "startup", "mentor", "heir", "employee_month", "consultant", "culture", "survivor", "archive", "burnout"];
 
 function pickEnding() {
+  if (G.mode === "hr") return pickEndingHR();
   const p = G.prog, F = G.flags, a = k => G.aff[k] || 0;
   if (F.join_startup && a("nouf") >= 50) return "startup";
   if (a("boss") >= 55 && p < 75) return "employee_month";
@@ -1347,6 +1370,7 @@ function pickEnding() {
 }
 
 function epilogue() {
+  if (G.mode === "hr") return epilogueHR();
   const F = G.flags, a = k => G.aff[k] || 0, o = [];
   o.push(["boss", F.boss_ally ? "صار يحمي وقت الفريق من الاجتماعات. يقول إنها كانت فكرته." : a("boss") >= 30 ? "يسلّم عليك بالاسم في الممر. ولده فيصل قُبل في تصميم الألعاب." : a("boss") < 0 ? "يرسل لك إيميلات تبدأ بـ «كما ناقشنا سابقًا». وأنتم ما ناقشتوا شي." : "لا يزال يجدول اجتماعات عن تقليل الاجتماعات."]);
   o.push(["nouf", F.join_startup ? "CTO في ستارتب صغيرة. أول مرة من سنين تشتغل بدون سماعات عازلة." : F.nouf_kpi_fixed ? "ترقّت أخيرًا. أول قرار لها: منع أي متغير اسمه data2." : a("nouf") < 0 ? "ما تسلّم. بس تراجع الـ PRs حقتك بنفس الصرامة. هذا عدلها." : "لا تزال تشيل النظام. ولا تزال تقول «اقرا الكود»."]);
@@ -1360,6 +1384,241 @@ function epilogue() {
   return o;
 }
 
+/* ===== HR MODE 1: Dr. Munira, HR day events, employee tickets ===== */
+ART.LOOK.munira = { skin: "#D4A884", head: "hijab", hij: "#2F5D50", cloth: "#1E2420", gl: "gold", bg: "#9FB8A8", brow: "#3A2618" };
+CH.munira = { n: "د. منيرة", r: "مديرة سعادة الموظفين", col: "#9FB8A8", v: { f: 240, w: "sine", v: 0.08, vol: 0.08 }, loves: "flowers", likes: ["bukhoor", "choc"], hates: ["samosa"], guard: "التقييم سرّي. مثل كل شي هنا." };
+OFFICE.push("munira"); NPCS.push("munira");
+OPIN.munira = { boss: "أبو فيصل يحترم السياسات. يكتبها في الإيميل ويتجاهلها في الاجتماع.", nouf: "نوف موهوبة. ومزعجة. لها ٤ شكاوى رسمية عن المكيّف.", sultan: "ملف سلطان فيه توصية من مكتب نائب الرئيس. وهذا كل اللي أبي أقوله.", mubarak: "العم مبارك أقل موظف كلفة وأعلى رضا. ما أدري كيف.", reem: "ريم تبي «تجربة موظف». قلت لها: عندنا استبيان.", abunayef: "أبو نايف ما حضر ولا دورة تدريبية من ٢٠٠٩. ولا احتاج.", richard: "h|ريتشارد شريك استراتيجي. فاتورته من ميزانيتنا، فلازم نحبه.", haya: "هيا عندها قلب. نحاول نعالجه بالسياسات.", yousef: "المتدرب؟ عقده ينتهي، والميزانية مجمّدة. مثل قلبي." };
+Object.keys(OPIN).forEach(k => { if (k !== "munira") OPIN[k].munira = { boss: "د. منيرة؟ لا أحد يكتب سياسات مثلها. ولا أحد يقراها.", nouf: "د. منيرة طلبت مني أكتب «خطة تطوير ذاتي». كتبت: أبي أتطور بعيد عن الاجتماعات.", sultan: "x|د. منيرة تخوّفني أكثر من نوف. وهذا إنجاز.", mubarak: "د. منيرة تشرب قهوتها سادة، وتقول «شكرًا» بالإنجليزي. بنت ناس.", reem: "د. منيرة تقيس كل شي إلا اللي يهم.", abunayef: "a|طلبت مني أعبّي «نموذج تحديث المهارات». كتبت: Cobol. رجّعته مرفوض.", richard: "h|Dr. Munira! A visionary. She signs the invoices.", haya: "s|د. منيرة علّمتني كل شي. حتى كيف أبتسم وأنا أقول «لا».", yousef: "x|سألتني وش «القيمة المضافة» حقتي. قلت: أجيب الشاي. ما ضحكت." }[k]; });
+
+const SHARED_RAND = ["r_fire", "r_cake", "r_lift", "r_kabsa", "r_wifi", "r_printer"];
+N.forEach(n => { if (SHARED_RAND.includes(n.id) || n.npc === "mom") n.pm = "all"; });
+
+/* ---------- HR day events ---------- */
+add(
+{ id: "h1", pm: "hr", npc: "munira", k: "ev", L: ["#إدارة «سعادة الموظفين». ورد صناعي، وبوستر «ابتسم!»، وصوت طابعة ما تسكت.", "h|أهلًا بك في الفريق. أنا د. منيرة.", "قاعدة رقم واحد: احنا هنا ما نحل المشاكل.", "h|احنا نوثّقها."],
+  c: [{ t: "وإذا الموظف يبي حل؟", fx: { munira: -3, prog: 3, set: "hr_asked" }, r: ["x|…نعطيه نموذج.", "النموذج حل. نفسيًا."] },
+      { t: "واضح. التوثيق أولًا.", fx: { munira: 6, rep: 4 }, r: ["h|ممتاز. عندك مستقبل هنا. مستقبل موثّق."] },
+      { t: "وين النماذج؟", fx: { munira: 3 }, r: ["#أشّرت على خزانة. فيها ٤٠٠ نموذج. ثلاثة منها مستخدمة."] }] },
+{ id: "h2", pm: "hr", npc: "group", k: "ev", L: ["#قروب «كل موظفي سَهْل» · ٧:٠٢ ص", "munira:زملاءنا الأعزاء، يعلن قسم سعادة الموظفين عن سياسة جديدة 🌸", "munira:يُمنع الأكل على المكاتب. البوفيه للأكل، والمكتب للإنتاجية.", "sultan:😐", "nouf:أنا آكل على المكتب لأن ما عندي وقت أطلع. بسبب الاجتماعات.", "boss:نؤيد السياسة. (يكتبها وهو ياكل سمبوسة)", "munira:@قسم_السعادة نرجو الرد على الاستفسارات."],
+  c: [{ t: "السياسة تبدأ الشهر الجاي، ونوسّع البوفيه أول.", fx: { prog: 6, munira: -4, rep: -2 }, r: ["sultan:أخيرًا أحد عاقل 👏", "munira:…سنناقش."] },
+      { t: "السياسة سارية من اليوم. شكرًا لتعاونكم 🌸", fx: { rep: 6, prog: -7, munira: 5, nouf: -5 }, r: ["#٤٠ شخص سوّوا «👍». ولا واحد منهم موافق."] },
+      { t: "نستثني اللي عندهم اجتماعات متتالية.", fx: { prog: 4, nouf: 6, boss: -2 }, r: ["nouf:يعني الكل.", "boss:…ليش أحس إن هذا موجّه لي؟"] }], mode: "chat" },
+{ id: "h3", pm: "hr", npc: "munira", k: "ev", L: ["#نتائج استبيان رضا الموظفين وصلت: ٤١٪.", "a|٤١؟ لا. نائب الرئيس ينتظر ٩٥.", "عندك لين الظهر."],
+  c: [{ t: "نرفع النتيجة الحقيقية، ومعها خطة تحسين.", fx: { prog: 8, rep: -6, munira: -6, haya: 6, set: "honest_survey" }, r: ["s|…خطة تحسين؟ تبي تشيلني من منصبي؟"] },
+      { t: "نعدّل الأسئلة لين تطلع ٩٥.", fx: { rep: 8, prog: -6, munira: 8, set: "fake_survey" }, r: ["h|شاطر. السؤال الجديد: «هل أنت راضٍ، أو راضٍ جدًا؟»"] },
+      { t: "نستبعد الإجابات السلبية «لعدم الموضوعية».", fx: { rep: 6, prog: -8, munira: 6, set: "fake_survey" }, r: ["h|منهجية علمية. ٩٤٪. نقرّبها لـ ٩٥."] }] },
+{ id: "h4", pm: "hr", npc: "haya", k: "ev", L: ["h|يوم التميّز المؤسسي بعد بكرة! وأنت المسؤول هالسنة 🎈", "الميزانية ٢٠ ألف ريال. وش نسوي فيها؟"],
+  c: [{ t: "بالونات، وكيك عليه الشعار، وتيشيرتات L للكل.", fx: { rep: 6, prog: -2, haya: 5, munira: 4 }, r: ["h|كلاسيكي! د. منيرة بتنبسط."] },
+      { t: "نص يوم إجازة للكل. بدون بالونات.", fx: { prog: 12, rep: -6, sultan: 6, nouf: 6, munira: -6 }, r: ["x|…إجازة؟ بس… وين الصور لـ LinkedIn؟"] },
+      { t: "نصلّح المكيّف اللي على ١٦ من سنتين.", fx: { prog: 8, nouf: 10, rep: 2, set: "fixed_ac" }, r: ["s|ما فيه صور للمكيّف…", "h|بس عادي. نصوّر الحرارة: ٢٢ درجة! 🎉"] }] },
+{ id: "h5", pm: "hr", npc: "richard", k: "ev", L: ["h|Big news, habibi! Kestrel's new product: HR-Bot.", "A chatbot that answers employees 24/7. Leave, salary, complaints.", "It reduces HR headcount by… well. By you."],
+  c: [{ t: "Great idea! Let's pilot it.", fx: { richard: 12, rep: 5, set: "accepted_bot" }, r: ["h|Visionary! I'll tell Dr. Munira you suggested it."] },
+      { t: "وش يرد البوت إذا أحد قال «تعبان»؟", fx: { richard: -4, prog: 4 }, r: ["x|It says: «Your feedback is important to us».", "…Okay, I see the problem."] },
+      { t: "خلّه يجاوب على أسئلة ريتشارد أول.", fx: { richard: -8, sultan: 5, prog: 2 }, r: ["a|Very funny. Very human."] }] },
+{ id: "h6", pm: "hr", npc: "sultan", k: "ev", L: ["#رجعتوا من الويكند. الراتب ما نزل.", "#١٧ موظف عند بابك. سلطان في المقدمة.", "a|وين الراتب؟! عندي قسط سيارة!"],
+  c: [{ t: "تتصل بالمالية وتطلع بموعد واضح.", fx: { energy: -8, stress: 6, prog: 8, rep: -2, mg: { k: "stamp", win: { prog: 6, rep: 4 }, lose: { prog: 2 } } }, r: ["#المالية تحتاج ٣٠ معاملة مختومة قبل الصرف. ابدأ."] },
+      { t: "«سيتم الصرف قريبًا بإذن الله».", fx: { prog: -8, rep: 3, sultan: -6 }, r: ["a|«قريبًا» هذي سمعتها من ٢٠٢٣."] },
+      { t: "ترسل إيميل للكل فيه الحقيقة كاملة.", fx: { prog: 6, rep: -6, munira: -6, sultan: 4 }, r: ["#الإيميل انتشر. المالية زعلت. الموظفين لأول مرة صدّقوا HR."] }] },
+{ id: "h7", pm: "hr", npc: "munira", k: "ev", L: ["#موسم التقييم السنوي.", "سياسة «التوزيع الطبيعي»: لازم ١٠٪ من كل فريق يكون «دون التوقعات».", "فريق التقنية عشرة أشخاص. يعني واحد. اختر."],
+  c: [{ t: "ريتشارد.", fx: { munira: -2, richard: -10, prog: 8, sultan: 4 }, r: ["x|…ريتشارد مستشار. مو موظف.", "h|…بس ما فيه شي يمنع. يمشي."] },
+      { t: "أرفض. الأداء ما ينقاس بمنحنى.", fx: { prog: 10, rep: -8, munira: -10, nouf: 6, set: "refused_curve" }, r: ["a|تسجيل الرفض في ملفك. بمنحنى."] },
+      { t: "سلطان. ما أحد بيعترض.", fx: { rep: 6, prog: -10, sultan: -18, munira: 6 }, r: ["#سلطان عرف بعد ٧ دقايق. البوفيه كله عرف بعد ٩."] }] },
+{ id: "h8", pm: "hr", npc: "nouf", k: "ev", nf: "nouf_kpi_fixed", L: ["#مقابلة خروج. نوف جالسة قدّامك، والاستقالة على الطاولة.", "s|ما أبي أطوّل. عندي عرض ثاني.", "اسأل أسئلتك الرسمية."],
+  c: [{ t: "(تقفل النموذج) وش اللي لو تغيّر كان بقيتي؟", fx: { nouf: 12, prog: 4, set: "real_exit" }, r: ["…ما أحد سألني هذا السؤال.", "s|ترقية حقيقية. واجتماعات أقل. ومكيّف مو على ١٦.", "#كتبت كل كلمة. هذا التقرير بيوصل."] },
+      { t: "السؤال ١: من ١ إلى ٥، كم تقيّمين تجربتك؟", fx: { nouf: -6, rep: 3 }, r: ["a|٣. وأنت ٢."] },
+      { t: "نقدر نعطيك ترقية إذا بقيتي.", fx: { nouf: 6, rep: -4, munira: -6, set: "counter_offer" }, r: ["x|…عندك صلاحية؟", "#ما عندك صلاحية. بس صار عندك قضية."] }] },
+{ id: "h9", pm: "hr", npc: "munira", k: "ev", L: ["#مكتب د. منيرة. الباب مقفول. الستائر مقفلة.", "s|«إعادة هيكلة». الإدارة تبي نقلّص وظيفة وحدة قبل الربع الجاي.", "أبي منك اسم. اليوم."],
+  c: [{ t: "وظيفة «مستشار التحول»؟ عقد Kestrel.", fx: { prog: 10, rep: 2, richard: -12, munira: 4, set: "cut_consultant" }, r: ["x|…عقد Kestrel أغلى من ستة موظفين.", "h|…ليش ما فكرت فيها؟ لأنه هو اللي اقترح إعادة الهيكلة."] },
+      { t: "ما أكتب اسم أحد. اكتبي اسمي إذا لازم.", fx: { prog: 8, rep: -10, munira: -4, haya: 10, set: "self_sacrifice" }, r: ["s|…", "خلني أفكر. هذي أول مرة أحد يقولها."] },
+      { t: "يوسف. المتدرب. أرخص عقد.", fx: { rep: 8, prog: -10, yousef: -25, munira: 6, set: "cut_intern" }, r: ["#يوسف عرف من الإيميل. قبل ما تقول له."] }] },
+);
+
+/* ---------- employee tickets (opened from the HR office inbox) ---------- */
+add(
+{ id: "t1", pm: "hr", npc: "sultan", k: "tix", d: 1, title: "تعريف بالراتب", L: ["h|ابي تعريف بالراتب. للبنك. قرض سيارة.", "…وإذا تقدر تكتب الراتب أعلى شوي؟ «تقديريًا»؟"],
+  c: [{ t: "تعريف رسمي بالراتب الحقيقي، يطلع اليوم.", fx: { sultan: 4, prog: 3, rep: 2 }, r: ["s|…الحقيقي. طيب. أشتري سيارة أصغر."] },
+      { t: "عبّ النموذج ٧ب، مع ٣ تواقيع وختم المدير.", fx: { sultan: -6, rep: 4, prog: -3 }, r: ["a|٣ تواقيع عشان ورقة فيها راتبي أنا؟"] }] },
+{ id: "t2", pm: "hr", npc: "nouf", k: "tix", d: 1, title: "شكوى: المكيّف", L: ["a|المكيّف فوق مكتبي على ١٦ من سنتين.", "رفعت ٤ شكاوى. ردّوا علي بـ «تم استلام طلبك». أربع مرات."],
+  c: [{ t: "ننقل مكتبك اليوم، وأطلب صيانة باسمي.", fx: { nouf: 10, prog: 5, energy: -4 }, r: ["x|…اليوم؟ مو «قريبًا»؟", "h|أول مرة HR يقول «اليوم»."] },
+      { t: "أشكّل «لجنة المكيّفات» تدرس الموضوع.", fx: { nouf: -8, rep: 3, prog: -4 }, r: ["a|لجنة. للمكيّف. أكيد."] },
+      { t: "نعطيك جاكيت عليه شعار الشركة.", fx: { nouf: -4, prog: -1, sultan: 2 }, r: ["#لبسته. ما ابتسمت. بس لبسته."] }] },
+{ id: "t3", pm: "hr", npc: "yousef", k: "tix", d: 2, title: "طلب إجازة", L: ["s|زواج أخوي الخميس. أبي ٣ أيام.", "بس قالوا لي المتدربين ما لهم إجازات في السياسة."],
+  c: [{ t: "استثناء. الزواج ما يتكرر.", fx: { yousef: 12, prog: 4, rep: -3 }, r: ["h|والله إنك تستاهل نعزمك!"] },
+      { t: "السياسة واضحة. آسف.", fx: { yousef: -10, rep: 4, prog: -4 }, r: ["s|…طيب. بحضر الزواج أونلاين."] },
+      { t: "نسجّلها «تدريب ميداني على تنظيم الفعاليات».", fx: { yousef: 14, prog: 3, set: "creative_leave" }, r: ["x|…هذا قانوني؟", "#قانوني تقنيًا. وأخلاقيًا ممتاز."] }] },
+{ id: "t4", pm: "hr", npc: "abunayef", k: "tix", d: 2, title: "شكوى: موقف السيارة", L: ["a|موقفي. ٢٢ سنة نفس الموقف. اليوم لقيت فيه سيارة ريتشارد.", "عليها ملصق «Kestrel VIP»."],
+  c: [{ t: "الموقف يرجع لك اليوم، وأكلم ريتشارد.", fx: { abunayef: 12, richard: -6, prog: 4 }, r: ["h|…اليوم. سمعت؟ اليوم."] },
+      { t: "نسوي سياسة مواقف بالأقدمية.", fx: { abunayef: 8, prog: 5, rep: -2, mubarak: 4 }, r: ["#العم مبارك صار عنده أقرب موقف في الشركة. ما عنده سيارة."] },
+      { t: "ريتشارد شريك استراتيجي. نلقى لك موقف ثاني.", fx: { abunayef: -12, richard: 6, rep: 4 }, r: ["a|السيرفر ٢ بعد شريك استراتيجي. نشوف مين يشتغل بكرة."] }] },
+{ id: "t5", pm: "hr", npc: "reem", k: "tix", d: 3, title: "خلاف بين الفرق", L: ["a|ريتشارد أخذ شرائحي عن المستخدمين، وعرضها باسمه.", "وسمّى العم اللي في بريدة «Persona B». أبي أحد يتدخل."],
+  c: [{ t: "اجتماع وساطة بينكم، والشرائح ترجع باسمك.", fx: { reem: 12, richard: -4, prog: 4, energy: -5 }, r: ["s|…شكرًا. ما توقعت HR يوقف مع أحد."] },
+      { t: "«نقترح التواصل المباشر بين الأطراف».", fx: { reem: -8, rep: 2 }, r: ["a|يعني «حلّوها بنفسكم». فهمت."] }] },
+{ id: "t6", pm: "hr", npc: "sultan", k: "tix", d: 3, title: "طلب بدل جوال", L: ["h|أبي بدل جوال. أستخدم جوالي للشغل كل يوم.", "#تفتح ملفه: «استخدام الجوال للشغل» = سناب في غرفة السيرفرات."],
+  c: [{ t: "نعتمده إذا جبت سجل استخدام للشغل.", fx: { sultan: 2, rep: 3 }, r: ["x|سجل؟… السناب يمسح نفسه."] },
+      { t: "معتمد. ١٠٠ ريال.", fx: { sultan: 10, prog: 2, rep: -4 }, r: ["h|أسطورة! بسوي لك سناب شكر."] }] },
+{ id: "t7", pm: "hr", npc: "mubarak", k: "tix", d: 4, title: "طلب زيادة", L: ["#العم مبارك واقف بالباب. ما رضى يجلس.", "s|٣٢ سنة يا وليدي. آخر زيادة كانت قبل الريال الجديد.", "ما أبي شي كبير. بس أبي أحد يشوف."],
+  c: [{ t: "أرفعها لد. منيرة اليوم، وبقوة.", fx: { mubarak: 14, munira: -5, prog: 6, set: "mubarak_raise" }, r: ["h|الله يجزاك خير. حتى لو ما صارت."] },
+      { t: "نضيفها لقائمة الانتظار.", fx: { mubarak: -6, prog: -4 }, r: ["s|القائمة… أعرفها. اسمي فيها من ٢٠١٤."] },
+      { t: "نعطيك «شهادة تقدير» في يوم التميّز.", fx: { mubarak: -4, rep: 3 }, r: ["#أخذ الشهادة. حطها تحت الدلّة."] }] },
+{ id: "t8", pm: "hr", npc: "boss", k: "tix", d: 4, title: "مقترح سياسة", L: ["h|عندي مقترح: نخلي حضور الاجتماعات بالبصمة.", "اللي يغيب، يُخصم. اللي يتأخر، يُخصم أكثر."],
+  c: [{ t: "نجرّب بالعكس: كل اجتماع لازم جدول أعمال وإلا يلغى.", fx: { boss: -6, prog: 10, nouf: 5 }, r: ["x|…جدول أعمال؟ لكل اجتماع؟ هذا… ٤٠ جدول بالأسبوع."] },
+      { t: "أرفعه للجنة السياسات.", fx: { boss: 3, rep: 3 }, r: ["h|ممتاز. متى اجتماع اللجنة؟", "#بعد أسبوعين. اجتماع."] },
+      { t: "معتمد. نركّب أجهزة البصمة.", fx: { boss: 8, rep: 6, prog: -12 }, r: ["#في أول يوم، طابور البصمة أخذ ٢٠ دقيقة. قبل الاجتماع."] }] },
+{ id: "t9", pm: "hr", npc: "nouf", k: "tix", d: 5, title: "طلب عمل عن بُعد", L: ["أبي يومين بالأسبوع من البيت.", "إنتاجيتي في البيت ضعف المكتب. عندي أرقام."],
+  c: [{ t: "معتمد. تجربة شهر، ونقيس.", fx: { nouf: 10, prog: 6, rep: -3 }, r: ["h|…قياس حقيقي؟ أحبك يا HR."] },
+      { t: "السياسة: الحضور ٥ أيام. «ثقافة الفريق».", fx: { nouf: -10, rep: 4, prog: -5 }, r: ["a|ثقافة الفريق اللي ما يسولف فيها أحد مع أحد؟"] }] },
+{ id: "t10", pm: "hr", npc: "richard", k: "tix", d: 5, title: "طلب مكتب خاص", L: ["Habibi, I need a private office. With a window. For creativity.", "h|And maybe a small fridge. For… strategy."],
+  c: [{ t: "عندنا غرفة فاضية: غرفة السيرفرات.", fx: { richard: -6, abunayef: 6, sultan: 4 }, r: ["x|…Is it cold?", "#١٦ درجة. ومعه أبو نايف."] },
+      { t: "معتمد. مكتب بنافذة.", fx: { richard: 10, rep: 4, prog: -6, nouf: -4 }, r: ["#المكتب كان مخزن للكراسي. الكراسي الحين في الممر."] }] },
+{ id: "t11", pm: "hr", npc: "mubarak", k: "tix", d: 6, title: "بلاغ: سرقة لبن", L: ["a|اللبن حقي انسرق من الثلاجة. للمرة الرابعة.", "حاطّ عليه ورقة باسمي. ومكتوب «لا تلمس». بخط واضح."],
+  c: [{ t: "تحقيق رسمي. أبدأ بالكاميرات.", fx: { mubarak: 8, energy: -6, stress: 4, set: "laban_case" }, r: ["#الكاميرات: سلطان، ٧:١٢ صباحًا، يشرب اللبن ويطالع الكاميرا.", "h|…الله يهديه. خلّه، بس قل له يجيب غيره."] },
+      { t: "نشتري لك ثلاجة صغيرة خاصة.", fx: { mubarak: 10, rep: -2, prog: 3 }, r: ["h|ثلاجة؟ باسمي؟ ٣٢ سنة وأول أصل باسمي."] }] },
+{ id: "t12", pm: "hr", npc: "haya", k: "tix", d: 6, title: "معيار الترقية", L: ["تذكر نوف؟ ترقيتها توقفت بسبب بند «حضور الاجتماعات».", "s|البند هذا أنا اللي كتبته قبل ٣ سنين. عشان أبين إني أسوي شي.", "أقدر أعدّله… بس أحتاج توقيعك."],
+  c: [{ t: "نشيل البند. ونرجّع تقييم نوف.", fx: { haya: 12, nouf: 15, prog: 8, rep: -4, set: "nouf_kpi_fixed" }, r: ["h|…ثلاث سنين. وانحلّت بتوقيعين."] },
+      { t: "خلّيه لين التقييم الجاي.", fx: { haya: -4, nouf: -4, rep: 2 }, r: ["s|التقييم الجاي بعد سنة."] }] },
+{ id: "t13", pm: "hr", npc: "yousef", k: "tix", d: 7, title: "طلب توظيف", L: ["تدريبي يخلص بعد أسبوعين.", "s|قالوا لي فيه تجميد توظيف. بس… أنا أحب المكان هنا. حتى المكيّف."],
+  c: [{ t: "أرفع طلب استثناء، وأجيب توصيات من الفريق.", fx: { yousef: 14, prog: 5, energy: -5, set: "yousef_case" }, r: ["h|…لو ما صارت، يكفي إنك حاولت."] },
+      { t: "«سيتم التواصل معك عند توفر شاغر».", fx: { yousef: -10, rep: 2 }, r: ["s|هذي الجملة اللي في الإيميل الآلي. حرفيًا."] }] },
+{ id: "t14", pm: "hr", npc: "boss", k: "tix", d: 7, title: "تحويل موظف", L: ["مكتب نائب الرئيس يطلب ترقية سلطان.", "x|أنا ما قلت شي. أنا بس أنقل الرسالة. حرفيًا."],
+  c: [{ t: "نطبّق نفس المعايير على الكل. سلطان يقدّم مثل غيره.", fx: { boss: -4, prog: 8, rep: -4, sultan: 2 }, r: ["s|…أقول لهم كذا؟", "x|طيب. بس إذا سألوا، أنت قلت."] },
+      { t: "تمت الترقية.", fx: { boss: 6, rep: 8, prog: -10, sultan: 8, nouf: -6 }, r: ["#في البوفيه صارت كلمة «ترقية» مثل كلمة «سمبوسة»: الكل يعرف وين مصدرها."] }] },
+{ id: "t15", pm: "hr", npc: "reem", k: "tix", d: 8, title: "طلب إجازة اضطرارية", L: ["s|أحتاج يومين. بس يومين.", "ما أبي أشرح. بس أنا تعبانة."],
+  c: [{ t: "معتمدة. ما تحتاجين تشرحين.", fx: { reem: 12, prog: 5 }, r: ["s|…شكرًا. جد."] },
+      { t: "نحتاج تقرير يبرّر الإجازة.", fx: { reem: -10, rep: 3, prog: -4 }, r: ["a|تقرير… عن التعب. حاضر."] }] },
+{ id: "t16", pm: "hr", npc: "sultan", k: "tix", d: 8, f: "laban_case", title: "اعتراف", L: ["s|سمعت إن عندكم كاميرات في البوفيه…", "x|بس أبي أقول إن اللبن كان… قريب من الانتهاء. أنا أنقذته."],
+  c: [{ t: "يجيب للعم مبارك كرتون لبن ويعتذر.", fx: { sultan: 4, mubarak: 8, prog: 3 }, r: ["h|كرتون؟ أجيب كرتونين! ومعه سمبوسة."] },
+      { t: "إنذار رسمي في الملف.", fx: { sultan: -12, rep: 4, mubarak: -2 }, r: ["a|إنذار. بسبب لبن. هذا في ملفي للأبد."] }] },
+{ id: "t17", pm: "hr", npc: "haya", k: "tix", d: 9, title: "ميزانية الحفل", L: ["h|حفل الإطلاق بكرة! باقي ١٥ ألف من الميزانية.", "د. منيرة تبي «جدار صور». أنا أبي… شي يحسّه الموظفين."],
+  c: [{ t: "مكافأة ٣٠٠ ريال لكل واحد في فريق الإطلاق.", fx: { prog: 10, rep: -4, haya: 6, munira: -4 }, r: ["h|ما فيه صور… بس فيه ابتسامات حقيقية!"] },
+      { t: "جدار صور، وإضاءة، وهاشتاق.", fx: { rep: 6, prog: -3, munira: 6 }, r: ["#الهاشتاق #سهل_يحتفل. أول تغريدة: «وين المكافآت؟»"] }] },
+{ id: "t18", pm: "hr", npc: "abunayef", k: "tix", d: 9, title: "طلب تقاعد", L: ["أبي أقدّم أوراق التقاعد. للسنة الجاية.", "a|بس بشرط: أحد يستلم مني النظام. مو «سيتم التعيين لاحقًا»."],
+  c: [{ t: "نفتح وظيفة مساعد له اليوم، ويوسف أول مرشح.", fx: { abunayef: 12, yousef: 8, prog: 6, rep: -2, set: "heir_plan" }, r: ["h|…يوسف؟ المتدرب اللي لمس الكيبورد؟ …ماشي. يتعلّم."] },
+      { t: "نسجّل طلبك، والتعيين لاحقًا.", fx: { abunayef: -10, rep: 2 }, r: ["a|«لاحقًا». نفس الكلمة من ٢٠١٦."] }] },
+);
+
+/* ===== HR MODE 2: talk nodes, phone, finale, endings ===== */
+add(
+{ id: "mu_intro", pm: "hr", npc: "munira", p: 9, L: ["h|تعال. عندي لك ملف ترحيبي.", "#الملف ٨٠ صفحة. الصفحة الأولى: «كيف تعبّي نموذج طلب ملف ترحيبي»."],
+  c: [{ t: "أقراه الليلة إن شاء الله.", fx: { munira: 6 }, r: ["h|أحب الموظف اللي يقرا. نادر."] }, { t: "فيه نسخة مختصرة؟", fx: { munira: -3 }, r: ["a|المختصرة ٤٠ صفحة. ما أنصح فيها."] }] },
+{ id: "mu_kpi", pm: "hr", npc: "munira", p: 8, a: 15, fact: "نائب الرئيس يحاسبها على «مؤشر السعادة»", L: ["تدري ليش أنا كذا؟", "s|نائب الرئيس يقيسني بـ «مؤشر السعادة». إذا نزل عن ٨٠، أنا أطير.", "فأنا أقيس السعادة… بطريقة تخليها فوق ٨٠."],
+  c: [{ t: "وإذا قسناها صح، وحسّناها فعلًا؟", fx: { munira: 6, prog: 3 }, r: ["x|…تحسين فعلي؟ هذا ياخذ سنة.", "s|والتقييم كل ربع."] }, { t: "مفهوم. نحميك أول.", fx: { munira: 8, rep: 3 }, r: ["h|أخيرًا أحد فاهم النظام."] }] },
+{ id: "mu_human", pm: "hr", npc: "munira", p: 9, a: 35, d: 5, fact: "بدأت أخصائية متحمسة قبل ١٥ سنة", L: ["#د. منيرة شايلة صورة قديمة: هي، أصغر بـ١٥ سنة، شايلة لوحة «نسمعك».", "s|كنت مثلك. أول سنة سويت مبادرة «باب مفتوح».", "قفلوا الباب بعد شهر. قالوا: «ضوضاء»."],
+  c: [{ t: "نفتحه مرة ثانية. ساعة بالأسبوع بس.", fx: { munira: 12, prog: 6, set: "open_door" }, r: ["s|…ساعة؟", "h|ساعة. وإذا أحد سأل، أنت اللي اقترحت."] }, { t: "الزمن تغيّر.", fx: { munira: 2 }, r: ["إيه. تغيّر علينا."] }] },
+{ id: "mu_c1", pm: "hr", npc: "munira", rep: 1, L: ["h|اكتشفت إن عندنا ٤٠٠ نموذج. أبي نوحّدها في نموذج واحد.", "#النموذج الموحّد ٣٢ صفحة."], c: [{ t: "«إنجاز»", fx: { munira: 3 } }, { t: "«وش اسم النموذج؟»", fx: { munira: 1 }, r: ["«نموذج طلب نموذج»."] }] },
+{ id: "mu_c2", pm: "hr", npc: "munira", rep: 1, L: ["لا تقول «مشكلة». قل «فرصة تحسين»."], c: [{ t: "«عندي فرصة تحسين: الرواتب متأخرة»", fx: { munira: -2, prog: 1 }, r: ["a|…قلها «فرصة توقيت»."] }, { t: "(تسجّل)", fx: { munira: 2 } }] },
+
+{ id: "ha_intro", pm: "hr", npc: "haya", p: 9, L: ["h|زميل جديد في الـ HR! أخيرًا!", "خلني أعلمك أهم ثلاث قواعد للبقاء:", "١) ابتسم دايمًا. ٢) لا تقول «لا»، قل «خلنا نشوف». ٣) لا تاكل سمبوسة قدّام د. منيرة."],
+  c: [{ t: "والقاعدة الرابعة؟", fx: { haya: 6 }, r: ["s|…لا تتعلّق بالموظفين. يطلعون كلهم."] }, { t: "حفظتها.", fx: { haya: 4 } }] },
+{ id: "ha_report", pm: "hr", npc: "haya", p: 8, a: 25, d: 3, fact: "كتبت تقرير مقابلات الخروج وما أحد قراه", L: ["s|عندي تقرير مقابلات الخروج. ٣٠ صفحة. ما أحد فتحه.", "نفس السببين في كل مقابلة: «اجتماعات كثيرة، وما فيه نمو»."],
+  c: [{ t: "نختصره لصفحة وحدة، ونرفعه سوا.", fx: { haya: 12, prog: 5, rep: 2, set: "haya_report" }, r: ["x|…صفحة؟ كذا يقرونه؟", "h|عبقري. الناس ما تقرا. الناس تشوف."] }, { t: "بعدين.", fx: { haya: -3 } }] },
+{ id: "ha_c1", pm: "hr", npc: "haya", rep: 1, L: ["h|سوّيت لك ستيكر: «أخصائي سعادة تحت التدريب» 🌸"], c: [{ t: "(تلصقه)", fx: { haya: 3, stress: -2 } }] },
+{ id: "ha_c2", pm: "hr", npc: "haya", rep: 1, L: ["s|أحيانًا أحس إن شغلنا نقنع الناس إنهم مبسوطين بدل ما نخليهم مبسوطين."], c: [{ t: "«نقدر نغيّر هذا»", fx: { haya: 4, prog: 1 } }, { t: "(تهز راسك)", fx: { haya: 2 } }] },
+
+{ id: "bo_hr", pm: "hr", npc: "boss", p: 9, L: ["h|إيه، HR الجديد. عندي طلب صغير.", "نوف… «سلوكها» في الاجتماعات. تقول «هذا الاجتماع كان ممكن يكون إيميل». قدّام الإدارة.", "أبي «جلسة توجيه»."],
+  c: [{ t: "قبلها، نجرّب نخلي بعض الاجتماعات إيميل فعلًا.", fx: { boss: -4, nouf: 6, prog: 4 }, r: ["x|…طيب. وحدة. تجريبي."] }, { t: "أرتّب الجلسة.", fx: { boss: 6, nouf: -8, rep: 3 }, r: ["h|ممتاز. وخلّها رسمية. بنموذج."] }] },
+{ id: "bo_c1", pm: "hr", npc: "boss", rep: 1, L: ["h|عندكم في HR دورة اسمها «إدارة الوقت»؟ أبي أسجّل الفريق كله.", "#الدورة ٣ أيام."], c: [{ t: "«مسجّلين»", fx: { boss: 3, prog: -1 } }, { t: "«٣ أيام عن إدارة الوقت؟»", fx: { boss: -1, prog: 1 } }] },
+
+{ id: "no_hr", pm: "hr", npc: "nouf", p: 9, L: ["a|HR؟ خير؟ وش سويت؟", "آخر مرة جا HR لمكتبي كان عشان «الستيكرات مو مطابقة للهوية»."],
+  c: [{ t: "ما سويتي شي. جيت أسأل: وش أكثر شي يضايقك هنا؟", fx: { nouf: 10, prog: 3 }, r: ["x|…جد تسأل؟", "المكيّف، والاجتماعات، والترقية اللي وقفت عشان «الحضور». بالترتيب."] }, { t: "زيارة روتينية.", fx: { nouf: -3 }, r: ["#رجعت السماعات."] }] },
+{ id: "no_hr2", pm: "hr", npc: "nouf", p: 8, a: 25, fact: "تثق في HR أول مرة", L: ["تدري؟ أنا كنت أحسب HR موجود عشان يحمي الشركة مننا.", "s|يمكن أنت غير. يمكن."],
+  c: [{ t: "أنا هنا عشان الاثنين. بس لما يتعارضون، أختار الناس.", fx: { nouf: 10, prog: 3, munira: -2 }, r: ["h|…لا تقول هذا قدّام د. منيرة."] }, { t: "HR يمثّل الشركة.", fx: { nouf: -6, rep: 2 }, r: ["a|إيه. عرفت."] }] },
+{ id: "no_c1", pm: "hr", npc: "nouf", rep: 1, L: ["لو تبي تحسّن الرضا: اشطب نص الاجتماعات. ما تحتاج استبيان."], c: [{ t: "(تكتبها)", fx: { nouf: 3, prog: 1 } }] },
+
+{ id: "su_hr", pm: "hr", npc: "sultan", p: 9, L: ["h|يا هلا بأقوى قسم في الشركة!", "سؤال افتراضي… لو واحد يبي إجازة مرضية الخميس… وهو مو مريض… بس «يحس إنه بيمرض»؟"],
+  c: [{ t: "خذ إجازة اعتيادية. عندك ٢٢ يوم ما استخدمتها.", fx: { sultan: 8, prog: 2 }, r: ["x|٢٢؟! ليش محد قال لي؟", "h|أنت أفضل HR في التاريخ."] }, { t: "هذا تحايل، ويسجّل في ملفك.", fx: { sultan: -6, rep: 2 }, r: ["a|افتراضي! قلت افتراضي!"] }] },
+{ id: "su_c1", pm: "hr", npc: "sultan", rep: 1, L: ["h|متى يوم التميّز الجاي؟ ودّي أرقص الدحّة مرة ثانية."], c: [{ t: "(تضحك)", fx: { sultan: 3, stress: -3 } }] },
+
+{ id: "mb_hr", pm: "hr", npc: "mubarak", p: 9, L: ["h|HR الجديد؟ تفضل شاي.", "شفت قبلك ١١ واحد في كرسيك. كلهم بدوا بالابتسامة.", "اللي بقى منهم، اللي حفظ أسماء الناس. مو أرقامهم."],
+  c: [{ t: "علّمني الأسماء يا عم.", fx: { mubarak: 12, prog: 3, stress: -4 }, r: ["h|هذاك أبو نايف، ما يحب أحد يقول «legacy». وهذيك ريم، تقول «لا» عشان الناس، مو عليهم…"] }, { t: "شكرًا على الشاي.", fx: { mubarak: 4, energy: 5 } }] },
+{ id: "mb_c1", pm: "hr", npc: "mubarak", rep: 1, L: ["الموظف يا وليدي ما يطلع من الشركة. يطلع من مديره."], c: [{ t: "«حكمة»", fx: { mubarak: 3, energy: 3 } }] },
+
+{ id: "re_hr", pm: "hr", npc: "reem", p: 9, L: ["عندي فكرة لكم: «رحلة الموظف». مثل رحلة المستخدم.", "نشوف وين الموظف يتعب، ونصلّحه. بدل الاستبيان السنوي."],
+  c: [{ t: "نجربها على فريق واحد الشهر هذا.", fx: { reem: 10, prog: 4, munira: -2 }, r: ["h|أخيرًا! أحد في HR يقول «نجرب» بدل «نرفع»."] }, { t: "نضيفها للاستبيان.", fx: { reem: -5, rep: 2 }, r: ["s|…سؤال رقم ٦١."] }] },
+{ id: "re_c1", pm: "hr", npc: "reem", rep: 1, L: ["تدري إن نموذج الإجازة فيه ١٤ حقل؟ أنا عدّيتها. جربته على العم مبارك. ضاع في الحقل الرابع."], c: [{ t: "«نختصره»", fx: { reem: 4, prog: 2 } }] },
+
+{ id: "ab_hr", pm: "hr", npc: "abunayef", p: 9, L: ["a|HR في غرفتي؟", "آخر مرة جا HR هنا كان عشان يعدّون الكراسي. أخذوا كرسيين."],
+  c: [{ t: "جيت أرجّع كرسي.", fx: { abunayef: 12 }, r: ["x|…كرسي؟ جبت كرسي فعلًا؟", "h|اجلس عليه. ولا تلمس شي."] }, { t: "جيت أحدّث بياناتك. من ٢٠١٢.", fx: { abunayef: -3, rep: 2 }, r: ["a|رقمي ما تغيّر. ولا أنا."] }] },
+{ id: "ab_c1", pm: "hr", npc: "abunayef", rep: 1, L: ["تبي تعرف رضا الموظفين؟ شف كم واحد يجي البوفيه الساعة ١٢ بدري. هذا مؤشرك."], c: [{ t: "«مؤشر دقيق»", fx: { abunayef: 3 } }] },
+
+{ id: "ri_hr", pm: "hr", npc: "richard", p: 9, L: ["h|HR! My favorite department. You know why?", "Because you approve my invoices. Haha. Kidding. Mostly."],
+  c: [{ t: "الفواتير تمر على المالية، مو علينا.", fx: { richard: -3 }, r: ["x|…Then why do I keep bringing you chocolate?"] }, { t: "Happy to help, Richard.", fx: { richard: 6 }, r: ["h|See? Synergy."] }] },
+{ id: "ri_c1", pm: "hr", npc: "richard", rep: 1, L: ["Have you considered a «Happiness Dashboard»? Real-time smiles. Very scalable."], c: [{ t: "«No»", fx: { richard: -1 } }, { t: "«Interesting»", fx: { richard: 2 } }] },
+
+{ id: "yo_hr", pm: "hr", npc: "yousef", p: 9, d: 2, L: ["x|سؤال: هل فيه «مسار وظيفي» للمتدربين؟", "قريت في LinkedIn إن الشركات الكبيرة عندها مسارات. نحن عندنا… ممر."],
+  c: [{ t: "نرسم لك مسار الحين على ورقة.", fx: { yousef: 12, energy: -4, prog: 3 }, r: ["h|…أول مرة أحد يرسم لي مستقبل. حتى لو بقلم رصاص."] }, { t: "المسار يتحدد بعد التوظيف.", fx: { yousef: -4 }, r: ["s|والتوظيف يتحدد بعد المسار؟"] }] },
+{ id: "yo_c1", pm: "hr", npc: "yousef", rep: 1, L: ["h|عبّيت كل استبيانات هيا. ٧ استبيانات. أحس إني موظف الشهر."], c: [{ t: "«أنت موظف الشهر»", fx: { yousef: 4 } }] },
+);
+
+/* ---------- phone (HR mode) ---------- */
+TEXTS.forEach(t => { if (t.id === "bank" || t.from === "mom") t.pm = "all"; });
+EMAILS.forEach(m => { if (["em2", "em6", "em8"].includes(m.id)) m.pm = "all"; });
+TEXTS.push(
+  { id: "hx1", pm: "hr", d: 1, s: 2, from: "haya", L: ["haya:نصيحة يوم أول 🌸", "haya:صندوق الطلبات عندنا ما يرحم. اللي يتأجل يتراكم، والمتراكم يزعّل الناس"] },
+  { id: "hx2", pm: "hr", d: 3, s: 3, from: "munira", L: ["munira:تذكير: تقرير المؤشرات الأسبوعي الساعة ٧ الصبح", "munira:بالألوان. الأخضر أكثر من الأحمر."], c: [{ t: "تم 👍", fx: { munira: 3, stress: 3 } }, { t: "حتى لو الأرقام حمراء؟", fx: { munira: -2 }, r: ["munira:الأرقام ما لها لون. نحن نختار."] }] },
+  { id: "hx3", pm: "hr", d: 5, s: 3, from: "sultan", L: ["sultan:شكرًا على الـ ٢٢ يوم إجازة 😂", "sultan:حجزت البر من الحين"], need: { sultan: 15 } },
+  { id: "hx4", pm: "hr", d: 8, s: 3, from: "nouf", need: { nouf: 30 }, L: ["nouf:ما قلت لك قبل…", "nouf:شكرًا. أول مرة أحس إن HR في صفّنا."], c: [{ t: "هذا شغلنا 🤍", fx: { nouf: 5 } }] },
+);
+EMAILS.push(
+  { id: "hm1", pm: "hr", d: 1, from: "د. منيرة", subj: "مؤشرات الأداء الخاصة بك", body: ["مؤشراتك: عدد النماذج المعالجة، عدد الابتسامات الموثّقة، ونسبة حضور الفعاليات.", "ملاحظة: «حل مشكلة» ليس مؤشرًا قابلًا للقياس."] },
+  { id: "hm2", pm: "hr", d: 4, from: "مكتب نائب الرئيس", subj: "مؤشر السعادة", body: ["نتطلع لمؤشر سعادة لا يقل عن ٩٥٪ هذا الربع.", "مع العلم أن الحوافز مجمّدة."], c: [{ t: "«سنبذل قصارى جهدنا»", fx: { rep: 2 } }, { t: "«السعادة تحتاج ميزانية»", fx: { rep: -3, prog: 2 }, r: ["تم الرد: «ملاحظة قيّمة. تُرفع للجنة»."] }] },
+  { id: "hm3", pm: "hr", d: 7, from: "المالية", subj: "تم صرف الرواتب", body: ["نعتذر عن التأخير الناتج عن «ظروف تقنية».", "الظروف التقنية: ٣٠ معاملة تنتظر ختم."] },
+  { id: "hm4", pm: "hr", d: 10, from: "Richard (Kestrel)", subj: "HR-Bot Pilot Results", body: ["The bot answered 1,204 questions.", "Most common answer: «Your feedback is important to us». Satisfaction: 12%."] },
+);
+
+const NEWS_HR = [
+  "عاجل: موظف جديد في HR يعتقد إن عمله «مساعدة الناس».",
+  "دراسة: ٩ من كل ١٠ نماذج يمكن تكون إيميل.",
+  "نتائج الاستبيان: الموظفين «راضين جدًا»… بعد تعديل الأسئلة.",
+  "صندوق الطلبات يتجاوز طوله طول الممر.",
+  "ريتشارد يكتشف «الذكاء الاصطناعي في الموارد البشرية».",
+  "الرواتب تتأخر. HR يبتسم بقلق.",
+  "موسم التقييم: المنحنى الطبيعي يبحث عن ضحية.",
+  "مقابلات الخروج: «الأسباب شخصية». الأسباب دايمًا شخصية.",
+  "إعادة هيكلة: كلمة ترعب الطابق كله.",
+  "حفل الإطلاق. والكل ينتظر إعلان مؤشر السعادة.",
+];
+
+function hrFinaleNode() {
+  const m = G.prog, r = G.rep, F = G.flags, L = ["#حفل الإطلاق. بالونات هيا في كل مكان. د. منيرة على المنصة.", "munira:والآن… لحظة إعلان «مؤشر السعادة» لهذا الربع."];
+  if (F.fake_survey) L.push("munira:h|٩٥٪! 👏", "#تصفيق. ونوف تطالعك من آخر القاعة. تعرف من وين جت الـ ٩٥.");
+  else L.push(`munira:${m >= 60 ? "h" : "x"}|${m >= 60 ? "النتيجة الحقيقية تحسّنت. لأول مرة من سنين." : "النتيجة… «فرصة تحسين»."}`);
+  if (F.open_door) L.push("#د. منيرة تضيف: «ومن الأسبوع الجاي، باب الإدارة مفتوح ساعة كل أحد». الحضور ما صدّقوا.");
+  L.push(m >= 65 ? "#الموظفين يسلّمون عليك بالاسم. العم مبارك صب لك أول فنجال." : "#الموظفين يبتسمون ابتسامة «يوم التميّز». الإلزامية.");
+  if (r >= 65) L.push("munira:h|وأشكر زميلنا على الالتزام الكامل بالسياسات.");
+  return { id: "hfin", pm: "hr", npc: "munira", k: "ev", L, c: [{ t: "(تنتظر قرار الإدارة)", fx: {} }] };
+}
+
+Object.assign(ENDS, {
+  hr_director: { h: "مدير سعادة… فعلًا", v: "ترقية", p: ["الأرقام الحقيقية تحسّنت، والإدارة انتبهت.", "صرت مدير «سعادة الموظفين». أول قرار: حذفت ٣٩٩ نموذج من ٤٠٠.", "النموذج الوحيد الباقي سؤال واحد: «وش نقدر نسوي لك؟»", "د. منيرة صارت مستشارة. تقول إنها كانت فكرتها من ٢٠١١. وأنت تخليها تقول."] },
+  hr_people: { h: "صوت الموظفين", v: "نقل إداري", p: ["الموظفين صاروا يثقون في HR. الإدارة… لا.", "وصلك خطاب: «نقل إلى إدارة الأرشفة لتعزيز قدراتها».", "في آخر يوم، الطابق كله سوّى لك حفلة. بدون بالونات. بس فيها كبسة وكلام صادق.", "العم مبارك قال: «اللي يحفظ أسماء الناس، الناس تحفظ اسمه»."] },
+  hr_policy: { h: "حارس السياسات", v: "ترقية", p: ["التزمت بكل سياسة. كل نموذج. كل توقيع.", "د. منيرة رشّحتك نائبًا لها. الإدارة سعيدة. المؤشرات خضراء.", "بس لما تدخل البوفيه، السوالف توقف.", "سلطان صار يسمّيك «نموذج ٧ب». في وجهك."] },
+  hr_bot: { h: "تم استبدالك", v: "HR-Bot", p: ["تجربة HR-Bot اللي وافقت عليها نجحت. على الورق.", "البوت صار يرد على الموظفين ٢٤ ساعة: «ملاحظاتك مهمة لنا».", "وأنت؟ صار دورك «مشرف تجربة البوت». يعني تقرا ردوده وتعتذر عنها.", "ريتشارد كتب في LinkedIn: «Proud to transform HR at Sahl». فيه صورتك. بدون اسمك."] },
+  hr_form: { h: "نموذج طلب نموذج", v: "مستمر", p: ["ما صار شي كبير. لا ترقية، ولا ثورة.", "صندوق الطلبات يتعبّى كل يوم، ويفضى كل يوم، ويتعبّى ثاني.", "بس صار فيه ناس تجي مكتبك عشان تسولف، مو بس عشان نموذج.", "وهذا، في الموارد البشرية، يعتبر إنجاز."] },
+});
+const END_ORDER_HR = ["hr_director", "hr_people", "hr_policy", "hr_bot", "hr_form"];
+
+function pickEndingHR() {
+  const m = G.prog, r = G.rep, F = G.flags;
+  if (F.accepted_bot && r < 70) return "hr_bot";
+  if (m >= 70 && r >= 55) return "hr_director";
+  if (m >= 65 && r < 55) return "hr_people";
+  if (r >= 65 && m < 45) return "hr_policy";
+  return "hr_form";
+}
+function epilogueHR() {
+  const F = G.flags, a = k => G.aff[k] || 0, o = [];
+  o.push(["munira", F.open_door ? "تفتح بابها ساعة كل أحد. أول أسبوع ما جا أحد. ثالث أسبوع صار فيه طابور." : a("munira") >= 30 ? "صارت تقول «مشكلة» بدل «فرصة تحسين». أحيانًا." : "لا تزال توحّد النماذج. وصلت ٣٢ صفحة."]);
+  o.push(["haya", F.haya_report ? "تقريرها صار صفحة وحدة. والإدارة قرته. مرتين." : a("haya") >= 30 ? "صارت تقول «لا» بدون ما تبتسم. وهذا تطوّر." : "لا تزال توزّع ستيكرات."]);
+  o.push(["nouf", F.nouf_kpi_fixed ? "ترقّت. أول شي سوّته: لغت اجتماع الوقوف." : F.real_exit ? "طلعت، بس تقرير خروجها غيّر سياسة الترقيات بعدها." : a("nouf") >= 30 ? "تسلّم عليك في الممر. بدون سماعات." : "لا تزال على ١٦ درجة."]);
+  o.push(["mubarak", F.mubarak_raise ? "جته الزيادة بعد ٣٢ سنة. اشترى دلّة جديدة، وخلّى القديمة للذكرى." : "يصب الشاي، ويحفظ الأسماء."]);
+  o.push(["sultan", a("sultan") >= 30 ? "استخدم الـ ٢٢ يوم إجازة. رجع بوزن زيادة وقصص أكثر." : "يمر من جنب مكتبك بسرعة، كأن عندك كاميرات."]);
+  o.push(["yousef", F.cut_intern ? "طلع من الشركة. لقى وظيفة ثانية بعد شهر. ما نسى الإيميل." : F.heir_plan || F.yousef_case ? "توظف رسميًا. أول شي سوّاه: عبّى استبيان الرضا كامل. ودمع." : "خلّص تدريبه، وأخذ معه ٣٠ ستيكر."]);
+  o.push(["abunayef", F.heir_plan ? "عنده مساعد أخيرًا. يعلّمه السيرفر ٢ كل ثلاثاء." : a("abunayef") >= 30 ? "رجع له موقفه. ويرسل لك «تمام؟» كل صبح." : "لا يزال يقفل الباب."]);
+  o.push(["richard", F.cut_consultant ? "عقد Kestrel ما تجدد. طار لشركة ثانية مع نفس الشرائح." : F.accepted_bot ? "يبيع HR-Bot لعشر شركات. مكتوب في العرض: «Inspired by Sahl»." : "لا يزال يطلب مكتب بنافذة."]);
+  return o;
+}
+
 /* ===== ENGINE: state, rules, time, messages, achievements ===== */
 const SAVE_KEY = "dawam2-save", META_KEY = "dawam2-meta";
 let G = null;
@@ -1367,9 +1626,10 @@ const META = { ach: {}, ends: {}, runs: 0 };
 try { Object.assign(META, JSON.parse(localStorage.getItem(META_KEY) || "{}")); } catch (e) {}
 function saveMeta() { try { localStorage.setItem(META_KEY, JSON.stringify(META)); } catch (e) {} }
 
-function fresh(name) {
+function fresh(name, mode) {
+  mode = mode || "eng"; setMode(mode);
   return {
-    v: 2, name: name || "عبدالله", day: 1, slot: 0, energy: 80, stress: 20, prog: 0, rep: 50, money: 340,
+    v: 2, mode, tix: TIX_FOR(1, mode), tixDone: 0, name: name || "عبدالله", day: 1, slot: 0, energy: 80, stress: 20, prog: mode === "hr" ? 50 : 0, rep: 50, money: 340,
     aff: Object.fromEntries(NPCS.map(k => [k, 0])), flags: {}, seen: {}, facts: {}, inv: { samosa: 1 }, met: {},
     texts: [], mails: [], st: { meetings: 0, bugs: 0, gifts: 0, wfh: 0, calls: 0, hots: {} },
     giftDay: {}, hotDay: {}, srvDay: 0, callDay: 0, capWarned: false,
@@ -1389,6 +1649,8 @@ const hasF = f => !f || [].concat(f).every(x => G.flags[x]);
 const noF = f => !f || [].concat(f).every(x => !G.flags[x]);
 
 function ok(n, loc) {
+  const pm = n.pm || "eng";
+  if (pm !== "all" && pm !== (G.mode || "eng")) return false;
   if (n.a != null && A(n.npc) < n.a) return false;
   if (n.am != null && A(n.npc) > n.am) return false;
   if (n.d != null && G.day < n.d) return false;
@@ -1411,6 +1673,9 @@ function pickTalk(npc, loc) {
 const hasNew = (npc, loc) => talkPool(npc, loc).some(n => !n.rep);
 
 const STATN = { energy: "الطاقة", stress: "الضغط", prog: "التقدّم", rep: "السمعة" };
+function setMode(m) { STATN.prog = m === "hr" ? "رضا الموظفين" : "التقدّم"; STATN.rep = m === "hr" ? "رضا الإدارة" : "السمعة"; }
+const TIX_FOR = (d, mode) => mode === "hr" ? N.filter(n => n.k === "tix" && n.d === d).map(n => n.id) : [];
+const pendingTix = () => (G.tix || []).filter(id => { const n = byId(id); return n && hasF(n.f); });
 function applyFx(fx) {
   const out = [];
   if (!fx) return out;
@@ -1423,7 +1688,7 @@ function applyFx(fx) {
     if (k === "money") { G.money = Math.max(0, G.money + v); out.push({ k, t: "ر.س", v, good: v > 0 }); continue; }
     if (STATN[k]) {
       let val = v;
-      if (k === "prog" && v > 0 && !G.flags.db_access && G.prog + v > 70) val = Math.max(0, 70 - G.prog);
+      if (k === "prog" && v > 0 && G.mode !== "hr" && !G.flags.db_access && G.prog + v > 70) val = Math.max(0, 70 - G.prog);
       const b = G[k]; G[k] = clamp(b + val, 0, 100); const d = G[k] - b;
       if (d) out.push({ k, t: STATN[k], v: d, good: k === "stress" ? d < 0 : d > 0 });
       continue;
@@ -1455,7 +1720,7 @@ function checkAch() {
   if (G.stress <= 0) unlock("zen");
   if (G.money < 20) unlock("broke");
   if (NPCS.some(k => G.aff[k] >= 60)) unlock("ally");
-  if (OFFICE.every(k => G.aff[k] >= 15)) unlock("friends");
+  if (OFFICE.every(k => (k === "munira" && G.mode !== "hr") || G.aff[k] >= 15)) unlock("friends");
 }
 function logLine(t, ch) { G.log.unshift({ d: G.day, s: G.slot, t, ch: ch || [] }); G.log = G.log.slice(0, 30); }
 
@@ -1469,6 +1734,7 @@ function deliver() {
   const got = [];
   for (const t of TEXTS) {
     if (G.texts.some(x => x.id === t.id)) continue;
+    if ((t.pm || "eng") !== "all" && (t.pm || "eng") !== G.mode) continue;
     if (t.d > G.day || (t.d === G.day && t.s > G.slot) || G.day > t.d + 1 || !needOk(t.need)) continue;
     G.texts.push({ id: t.id, read: false, done: !t.c, pick: null });
     if (t.fx) applyFx(t.fx);
@@ -1476,6 +1742,7 @@ function deliver() {
   }
   for (const m of EMAILS) {
     if (G.mails.some(x => x.id === m.id) || m.d > G.day) continue;
+    if ((m.pm || "eng") !== "all" && (m.pm || "eng") !== G.mode) continue;
     G.mails.unshift({ id: m.id, read: false, done: !m.c });
     got.push({ type: "mail" });
   }
@@ -1506,7 +1773,7 @@ function workFx(score, home) {
   g = Math.max(1, Math.round(g * (0.6 + 0.8 * score)));
   return home ? { prog: g, energy: -10, stress: 15 - Math.round(score * 4) } : { prog: g, energy: -12, stress: Math.round(10 - score * 5) };
 }
-const progBlocked = () => !G.flags.db_access && G.prog >= 70;
+const progBlocked = () => G.mode !== "hr" && !G.flags.db_access && G.prog >= 70;
 
 function giftReaction(npc, item) {
   const c = CH[npc];
@@ -1543,7 +1810,7 @@ function weekendOpts() {
   const o = [
     { t: "راحة تامة. الجوال على الصامت.", fx: { energy: 100, stress: -30 }, m: "نمت ١١ ساعة. حلمت بالجيرا مرة وحدة بس." },
     { t: "غدا الجمعة عند الأهل.", fx: { energy: 35, stress: -40, mom: 15 }, m: "كبسة الوالدة، وسؤال الزواج ثلاث مرات. ورجعت خفيف." },
-    { t: "أشتغل في الويكند وألحق.", fx: { prog: 12, energy: 20, stress: 14 }, m: "خلّصت كثير. وحسيت إنك ما ارتحت أبدًا." },
+    G.mode === "hr" ? { t: "أخلّص الطلبات المعلقة في الويكند.", fx: { prog: 6, energy: 20, stress: 14, clear: 1 }, m: "صندوق الطلبات فضى. وأنت بعد." } : { t: "أشتغل في الويكند وألحق.", fx: { prog: 12, energy: 20, stress: 14 }, m: "خلّصت كثير. وحسيت إنك ما ارتحت أبدًا." },
   ];
   if (A("sultan") >= 20) o.push({ t: "طلعة بر مع سلطان والشباب.", fx: { energy: 30, stress: -35, sultan: 15 }, m: "نار ودلّة وسماء بلا إشعارات. سلطان طلع يعرف أسماء النجوم." });
   return o;
@@ -1551,6 +1818,7 @@ function weekendOpts() {
 function doWeekend(i) {
   const o = weekendOpts()[i], fx = { ...o.fx };
   if (fx.energy === 100) { G.energy = 100; delete fx.energy; }
+  if (fx.clear) { G.tixDone += pendingTix().length; G.tix = []; delete fx.clear; }
   const ch = applyFx(fx);
   G.weekend = true; G.phase = "play"; logLine(o.m, ch); save();
   return { o, ch };
@@ -1562,7 +1830,13 @@ function night() {
   G.energy = clamp(G.energy + sleep, 0, 100);
   G.stress = clamp(G.stress + (G.day >= 7 ? 6 : G.day >= 4 ? 3 : -2) - (G.flags.standup_cut ? 2 : 0), 0, 100);
   if (G.day === 1) unlock("first_day");
+  if (G.mode === "hr") {
+    const p = pendingTix().length;
+    if (p === 0) unlock("inbox");
+    if (p) { G.stress = clamp(G.stress + p * 3, 0, 100); G.prog = clamp(G.prog - p * 2, 0, 100); logLine(`${p} طلبات بقت معلّقة. الناس بدت تتكلم.`, [{ k: "prog", t: STATN.prog, v: -p * 2, good: false }]); }
+  }
   G.day++; G.slot = 0; G.hotDay = {};
+  if (G.mode === "hr") G.tix = [...(G.tix || []), ...TIX_FOR(G.day, "hr")];
 }
 function recordEnding(k) {
   G.phase = "ending"; G.endKey = k;
@@ -1783,7 +2057,54 @@ const MG = (() => {
       later(next, 500);
     });
   }
-  return { run: (k, o) => ({ bugs, pour, bingo, simon }[k] || bugs)(o) };
+  /* 5) stamp the paperwork (HR) */
+  function stamp(o = {}) {
+    return new Promise(res => {
+      const el = shell("ختم المعاملات", "اعتمد المعاملة الكاملة بس. أي خانة ناقصة = مرفوضة. حتى لو «مستعجلة جدًا».");
+      const A = el.querySelector("#mgA"), S = el.querySelector("#mgS"), T = el.querySelector("#mgT");
+      A.innerHTML = `<div class="stamp-wrap"><div class="form-card" id="fc"></div><div class="stamp-btns"><button class="st-no" id="sNo">مرفوض</button><button class="st-yes" id="sYes">معتمد</button></div></div>`;
+      const fc = A.querySelector("#fc");
+      const TYPES = ["طلب إجازة", "تعريف بالراتب", "بدل سكن", "تحديث بيانات", "طلب نموذج", "بدل جوال", "إجازة اضطرارية"];
+      const NAMES = ["سلطان", "نوف", "العم مبارك", "ريم", "أبو نايف", "يوسف", "موظف الدور الثالث", "ريتشارد"];
+      const DUR = 22000; let t0 = performance.now(), raf, cur = null, right = 0, n = 0, lock = false;
+      function next() {
+        const ok = Math.random() < 0.5, urgent = Math.random() < 0.22;
+        const f = [true, true, true];
+        if (!ok) f[Math.random() * 3 | 0] = false;
+        cur = { ok: f.every(Boolean) };
+        const row = (lbl, v) => `<div class="fr"><span>${lbl}</span><b class="${v ? "ok" : "bad"}">${v ? "✓" : "✗"}</b></div>`;
+        fc.innerHTML = `${urgent ? `<div class="urgent">مستعجل جدًا · مكتب نائب الرئيس</div>` : ""}<h4>${TYPES[Math.random() * TYPES.length | 0]}</h4><div class="fn">مقدّم الطلب: ${NAMES[Math.random() * NAMES.length | 0]}</div>${row("التوقيع", f[0])}${row("المرفقات", f[1])}${row("التاريخ ساري", f[2])}`;
+        fc.className = "form-card in"; lock = false;
+      }
+      function decide(yes) {
+        if (lock || !cur) return; lock = true; n++;
+        const good = yes === cur.ok;
+        if (good) right++;
+        fc.insertAdjacentHTML("beforeend", `<div class="seal ${yes ? "y" : "n"}">${yes ? "معتمد" : "مرفوض"}</div>`);
+        SND.play(good ? "stamp" : "buzz");
+        S.textContent = `${ar(right)}/${ar(n)}`;
+        setTimeout(() => { fc.className = "form-card out"; setTimeout(next, 160); }, 330);
+      }
+      A.querySelector("#sYes").addEventListener("pointerdown", e => { e.preventDefault(); decide(true); });
+      A.querySelector("#sNo").addEventListener("pointerdown", e => { e.preventDefault(); decide(false); });
+      const key = e => { if (e.key === "ArrowRight") decide(true); if (e.key === "ArrowLeft") decide(false); };
+      document.addEventListener("keydown", key);
+      function loop(now) {
+        const t = now - t0;
+        T.style.width = Math.max(0, 100 - t / DUR * 100) + "%";
+        if (t >= DUR) {
+          const sc = right / Math.max(n, 10);
+          if (n >= 10 && right === n) unlock("stamp");
+          return finish(el, sc, `ختمت ${ar(n)} معاملة، ${ar(right)} منها صح`, res, stop);
+        }
+        raf = requestAnimationFrame(loop);
+      }
+      const stop = () => { cancelAnimationFrame(raf); document.removeEventListener("keydown", key); };
+      skip(el, res, stop);
+      next(); raf = requestAnimationFrame(loop);
+    });
+  }
+  return { run: (k, o) => ({ bugs, pour, bingo, simon, stamp }[k] || bugs)(o) };
 })();
 
 /* ===== UI CORE: main screen, places, actions, time flow, title, day cards, endings ===== */
@@ -1792,6 +2113,7 @@ const $ = s => document.querySelector(s);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 let curLoc = null, busy = false;
 
+const EVD_HR = { 1: ["h1"], 2: ["h2"], 3: ["h3"], 4: ["h4"], 5: ["h5"], 6: ["h6"], 7: ["h7"], 8: ["h8"], 9: ["h9"] };
 const EVD = { 1: ["e1"], 2: ["e2"], 3: ["e3"], 4: ["e4"], 5: ["e5"], 6: ["e6"], 7: ["e7"], 8: ["e8"], 9: ["e9"], 10: ["e10a", "e10b"] };
 const NEWS = [
   "عاجل: موظف جديد يصدّق إن الاجتماع عشر دقايق.",
@@ -1848,14 +2170,14 @@ const occupants = loc => OFFICE.filter(id => where(id, G.day, G.slot) === loc);
 const mood = id => A(id) >= 35 ? "h" : A(id) < 0 ? "a" : "n";
 
 function tabHTML(l) {
-  const ppl = occupants(l), fresh = ppl.some(id => hasNew(id, l));
+  const ppl = occupants(l), fresh = ppl.some(id => hasNew(id, l)) || (l === "hr" && G.mode === "hr" && pendingTix().length > 0);
   return `<button class="loc-tab ${l === curLoc ? "on" : ""}" data-l="${l}">${fresh ? `<i class="dot"></i>` : ""}<b>${LOCS[l].n}</b>
     <span class="who">${ppl.length ? ppl.map(id => ART.portrait(id, "n", { round: 1 })).join("") : `<span class="none">ما فيه أحد</span>`}</span></button>`;
 }
 
 UI.renderPlay = function () {
   const eve = G.slot === 3, locs = availLocs();
-  if (!curLoc || !locs.includes(curLoc)) curLoc = eve ? "home" : "floor";
+  if (!curLoc || !locs.includes(curLoc)) curLoc = eve ? "home" : G.mode === "hr" ? "hr" : "floor";
   $("#game").innerHTML = `<header class="hud" id="hud"></header><main class="stage" id="stage"></main>
     <nav class="locs" id="locs">${locs.map(tabHTML).join("")}</nav><div class="acts" id="acts"></div>
     <nav class="dock">
@@ -1932,7 +2254,16 @@ function showHot(id) {
 }
 
 /* ---------- actions ---------- */
+function actsFor(loc) {
+  if (G.mode !== "hr") return LOCS[loc].acts;
+  const p = pendingTix().length;
+  return ({
+    hr: [{ k: "ticket", t: "افتح الطلب التالي", h: p ? `معلّقة: ${ar(p)}` : "الصندوق فاضي" }, { k: "stamp", t: "ختم المعاملات", h: "لعبة الختم" }],
+    floor: [{ k: "walk", t: "تجوّل بين المكاتب", h: "رضا الموظفين ↑" }],
+  })[loc] || LOCS[loc].acts;
+}
 function actDisabled(k) {
+  if (k === "ticket" && !pendingTix().length) return "الصندوق فاضي. استمتع";
   if ((k === "work" || k === "wfh") && progBlocked()) return "محتاج صلاحية قاعدة البيانات";
   if (k === "server") {
     if (where("abunayef", G.day, G.slot) !== "server") return "أبو نايف مو موجود";
@@ -1943,7 +2274,7 @@ function actDisabled(k) {
   return "";
 }
 function renderActs() {
-  const acts = LOCS[curLoc].acts, box = $("#acts");
+  const acts = actsFor(curLoc), box = $("#acts");
   if (!acts.length) { box.innerHTML = `<div class="hint">${occupants(curLoc).length ? "اضغط على أي شخص عشان تكلمه" : "مكان هادي. اضغط على الأشياء في المشهد"}</div>`; return; }
   box.innerHTML = acts.map(a => { const dis = actDisabled(a.k); return `<button class="act" data-k="${a.k}" ${dis ? "disabled" : ""}>${a.t}<small>${dis || a.h}</small></button>`; }).join("");
   box.querySelectorAll(".act").forEach(b => b.onclick = () => { if (!b.disabled && !busy) doAct(b.dataset.k); });
@@ -1951,7 +2282,19 @@ function renderActs() {
 async function doAct(k) {
   busy = true; SND.play("select");
   let ch = [], msg = "";
-  if (k === "work" || k === "wfh") {
+  if (k === "ticket") {
+    const id = pendingTix()[0], n = byId(id);
+    G.tix = G.tix.filter(x => x !== id); G.tixDone++;
+    await UI.runNode(n, {});
+    msg = `عالجت طلب: ${n.title}.`;
+  } else if (k === "stamp") {
+    const sc = await MG.run("stamp");
+    ch = applyFx({ rep: 2 + Math.round(5 * sc), stress: Math.round(4 - 6 * sc), energy: -6 });
+    msg = "ختمت كومة معاملات. الطابعة ما زالت تطبع.";
+  } else if (k === "walk") {
+    ch = applyFx({ prog: 3, energy: -4, stress: -2 }); SND.play("swoosh");
+    msg = "تجوّلت بين المكاتب. ثلاثة سألوك «فيه شي؟». قلت «لا، بس جاي أسلّم». ما صدّقوا.";
+  } else if (k === "work" || k === "wfh") {
     const sc = await MG.run("bugs");
     ch = applyFx(workFx(sc, k === "wfh"));
     if (k === "wfh") { G.st.wfh++; checkAch(); }
@@ -2004,7 +2347,7 @@ UI.beginSlot = async function () {
   }
   if (G.slot === 0 && !G.evDone[G.day]) {
     G.evDone[G.day] = 1; save();
-    const n = (EVD[G.day] || []).map(byId).find(x => x && ok(x));
+    const n = ((G.mode === "hr" ? EVD_HR : EVD)[G.day] || []).map(byId).find(x => x && ok(x));
     if (n) { await sleep(350); const r = await UI.runNode(n, { event: true }); if (G.phase !== "play") return; if (r && r.skip) { busy = false; return UI.endSlot(); } }
   } else {
     const r = pickRandomEvent();
@@ -2029,7 +2372,7 @@ UI.dayCard = function () {
     const left = 10 - G.day;
     const leftTxt = left <= 0 ? "يوم الإطلاق" : left === 1 ? "باقي يوم واحد على الإطلاق" : left === 2 ? "باقي يومين على الإطلاق" : `باقي ${ar(left)} أيام على الإطلاق`;
     const o = overlay("daycard", `<div class="big num">${ar(G.day)}</div><h2>${DAYN[(G.day - 1) % 5]}${G.day > 5 ? " · الأسبوع الثاني" : ""}</h2><p>${leftTxt}</p>
-      <div class="count">${Array.from({ length: 10 }, (_, i) => `<span class="${i < G.day ? "done" : ""}"></span>`).join("")}</div><div class="news">${NEWS[G.day - 1] || ""}</div>`);
+      <div class="count">${Array.from({ length: 10 }, (_, i) => `<span class="${i < G.day ? "done" : ""}"></span>`).join("")}</div><div class="news">${(G.mode === "hr" ? NEWS_HR : NEWS)[G.day - 1] || ""}</div>`);
     let done = false;
     const end = () => { if (done) return; done = true; o.remove(); res(); };
     o.onclick = end; setTimeout(end, 2600);
@@ -2052,7 +2395,7 @@ UI.weekend = function () {
 UI.runLaunch = async function () {
   busy = true; save(); UI.renderPlay(); SND.music("tension");
   await sleep(400);
-  await UI.runNode(launchNode(), { event: true });
+  await UI.runNode(G.mode === "hr" ? hrFinaleNode() : launchNode(), { event: true });
   busy = false;
   UI.ending(pickEnding());
 };
@@ -2061,15 +2404,15 @@ UI.ending = function (key) {
   recordEnding(key);
   busy = false; $("#layer").innerHTML = "";
   SND.music("ending"); SND.amb(null);
-  const E = ENDS[key], epi = key === "burnout" ? epilogue().slice(0, 4) : epilogue(), found = Object.keys(META.ends).length;
+  const E = ENDS[key], epi = key === "burnout" ? epilogue().slice(0, 4) : epilogue(), order = G.mode === "hr" ? END_ORDER_HR : END_ORDER, found = order.filter(k => META.ends[k]).length;
   const o = overlay("end-scr", `<div class="end-in">
     <div class="small-print" style="text-align:right">ملف الموظف: ${G.name} · اليوم ${ar(Math.min(G.day, 10))} من ١٠</div>
     <h1>${E.h}</h1><span class="stamp">${E.v}</span>
     ${E.p.map((t, i) => `<p class="par" style="animation-delay:${0.7 + i * 0.5}s">${t}</p>`).join("")}
     <h3 style="color:var(--saffron);margin:24px 0 0">وين صاروا</h3>
     <div class="epi">${epi.map(([id, t], i) => `<div style="animation-delay:${2.4 + i * 0.12}s">${ART.portrait(id, A(id) >= 30 ? "h" : A(id) < 0 ? "s" : "n", { round: 1 })}<p><b>${CH[id].n}</b><br>${t}</p></div>`).join("")}</div>
-    <div class="ends">${END_ORDER.map(k => `<span class="${META.ends[k] ? "got" : ""}">${META.ends[k] ? ENDS[k].h : "؟؟؟"}</span>`).join("")}</div>
-    <p class="small-print">اكتشفت ${ar(found)} من ١٠ نهايات. كل اختيار وكل علاقة توديك لطريق ثاني.</p>
+    <div class="ends">${order.map(k => `<span class="${META.ends[k] ? "got" : ""}">${META.ends[k] ? ENDS[k].h : "؟؟؟"}</span>`).join("")}</div>
+    <p class="small-print">اكتشفت ${ar(found)} من ${ar(order.length)} نهايات في هذا الوضع. كل اختيار وكل علاقة توديك لطريق ثاني.</p>
     <div style="display:grid;gap:10px;margin-top:16px"><button class="btn" id="eAgain">دوام جديد</button><button class="btn ghost" id="eAch">الإنجازات</button></div></div>`);
   setTimeout(() => SND.play("stamp"), 450);
   o.querySelector("#eAgain").onclick = () => { SND.play("select"); clearSave(); o.remove(); UI.title(); };
@@ -2078,19 +2421,25 @@ UI.ending = function (key) {
 
 UI.title = function () {
   const saved = loadSave(), live = saved && saved.phase !== "ending";
+  let mode = "eng";
+  const nEnds = Object.keys(META.ends).length;
   $("#layer").innerHTML = "";
   $("#game").innerHTML = `<div class="title-scr"><div class="scene-wrap">${ART.scene("roof", 3)}</div><div class="shade"></div>
-    <div class="title-body"><h1 class="logo">دوام</h1><p>محاكي حياة موظف ساخر. عشرة أيام عمل، إطلاق واحد، وناس كثير.</p>
-    ${live ? `<button class="btn" id="tCont">كمّل دوامك · اليوم ${ar(saved.day)}</button>` : ""}
+    <div class="title-body"><h1 class="logo">دوام</h1><p>محاكي حياة موظف ساخر. عشرة أيام عمل، وناس كثير.</p>
+    ${live ? `<button class="btn" id="tCont">كمّل دوامك · ${saved.mode === "hr" ? "الموارد البشرية" : "الهندسة"} · اليوم ${ar(saved.day)}</button>` : ""}
+    <div class="mode-pick" role="radiogroup" aria-label="اختر وظيفتك">
+      <button class="on" data-m="eng" role="radio" aria-checked="true"><b>مهندس backend</b><span>إطلاق خلال ١٠ أيام</span></button>
+      <button data-m="hr" role="radio" aria-checked="false"><b>الموارد البشرية<i class="new">جديد</i></b><span>طلبات الناس ومشاكلهم</span></button></div>
     <input class="name-in" id="tName" maxlength="16" placeholder="اسمك في الشركة" aria-label="اسمك" value="${(saved && saved.name || "").replace(/"/g, "")}">
     <button class="btn ${live ? "ghost" : ""}" id="tNew">ابدأ أول يوم</button>
-    <div class="small-print">${Object.keys(META.ends).length ? `اكتشفت ${ar(Object.keys(META.ends).length)} من ١٠ نهايات · ` : ""}فيه أصوات وموسيقى. الشركة والشخصيات خيالية.</div></div></div>`;
-  $("#tNew").onclick = () => { SND.init(); SND.play("select"); clearSave(); G = fresh($("#tName").value.trim()); save(); curLoc = null; UI.dayCard().then(UI.beginSlot); };
+    <div class="small-print">${nEnds ? `اكتشفت ${ar(nEnds)} نهايات · ` : ""}فيه أصوات وموسيقى. الشركة والشخصيات خيالية.</div></div></div>`;
+  document.querySelectorAll(".mode-pick button").forEach(b => b.onclick = () => { SND.init(); SND.play("click"); mode = b.dataset.m; document.querySelectorAll(".mode-pick button").forEach(x => { x.classList.toggle("on", x === b); x.setAttribute("aria-checked", x === b); }); });
+  $("#tNew").onclick = () => { SND.init(); SND.play("select"); clearSave(); G = fresh($("#tName").value.trim(), mode); save(); curLoc = null; UI.dayCard().then(UI.beginSlot); };
   if (live) $("#tCont").onclick = () => { SND.init(); SND.play("select"); G = saved; UI.resume(); };
   SND.music("title"); SND.amb("roof");
 };
 UI.resume = function () {
-  busy = false;
+  busy = false; setMode(G.mode || "eng");
   if (G.phase === "weekend") return UI.weekend();
   if (G.phase === "ending") return UI.ending(G.endKey);
   UI.renderPlay();
@@ -2106,6 +2455,7 @@ const GREET = {
   abunayef: ["a|سكّر الباب.", "…نعم.", "h|ادخل ادخل. البرد يطلع."],
   richard: ["Oh. Hi.", "h|Habibi! What's up?", "h|My favorite person in this building!"],
   haya: ["…أهلًا 🌸", "h|أهلًا! كيف سعادتك اليوم؟", "h|هلا هلا! كنت أفكر فيك!"],
+  munira: ["a|عندك موعد؟ ما عندك موعد.", "تفضل. باختصار. ومعك نموذج؟", "h|تعال تعال. أنت الوحيد اللي ما يجيني بشكوى."],
   yousef: ["s|…أهلًا.", "x|أهلًا! عندي سؤال… لا، عادي، تفضل.", "h|أستاذي! هلا والله!"],
 };
 function parseLine(line, def) {
@@ -2246,7 +2596,7 @@ function picker(o, html) {
     box.querySelectorAll("button").forEach(b => b.onclick = () => { SND.play(b.dataset.v ? "select" : "back"); box.innerHTML = ""; box.className = ""; resolve(b.dataset.v || null); });
   });
 }
-const pickPerson = (o, npc) => picker(o, OFFICE.filter(k => k !== npc).map(k => `<button data-v="${k}">${ART.portrait(k, "n", { round: 1 })}<span>${CH[k].n}</span></button>`).join(""));
+const pickPerson = (o, npc) => picker(o, OFFICE.filter(k => k !== npc && (k !== "munira" || G.mode === "hr")).map(k => `<button data-v="${k}">${ART.portrait(k, "n", { round: 1 })}<span>${CH[k].n}</span></button>`).join(""));
 const pickItem = o => picker(o, Object.entries(G.inv).filter(([k, v]) => v > 0).map(([k, v]) => `<button data-v="${k}">${ART.item(k)}<span>${ITEMS[k].n}</span><em class="num">×${ar(v)}</em></button>`).join(""));
 function giftLine(npc, it, r) {
   const n = ITEMS[it].n;
@@ -2431,7 +2781,7 @@ UI.sheet = function (kind) {
   o.addEventListener("click", e => { if (e.target === o || e.target.classList.contains("ov-inner")) close(); });
   if (kind === "rel") {
     h.textContent = "العلاقات";
-    b.innerHTML = NPCS.map(id => { const a = A(id), full = Math.max(0, Math.min(5, Math.round(a / 20)));
+    b.innerHTML = NPCS.filter(id => id !== "munira" || G.mode === "hr").map(id => { const a = A(id), full = Math.max(0, Math.min(5, Math.round(a / 20)));
       return `<div class="rel">${ART.portrait(id, a >= 35 ? "h" : a < 0 ? "a" : "n", { round: 1 })}<div class="t"><div class="top"><b>${CH[id].n}</b><span class="num">${level(a)} · ${a > 0 ? "+" : ""}${ar(a)}</span></div><span style="color:var(--muted);font-size:12.5px">${CH[id].r}</span>
       <div class="hearts">${Array.from({ length: 5 }, (_, i) => `<span style="opacity:${i < full ? 1 : 0.18}">${ART.emote(a < 0 && i === 0 ? "rain" : "heart")}</span>`).join("")}</div>
       ${(G.facts[id] || []).length ? `<ul class="facts">${G.facts[id].map(f => `<li>${f}</li>`).join("")}</ul>` : `<span style="color:var(--muted);font-size:12.5px">${G.met[id] ? "تعرف عنه القليل. سولف أكثر." : "ما تعرفتوا للحين."}</span>`}</div></div>`; }).join("");
@@ -2443,7 +2793,8 @@ UI.sheet = function (kind) {
     b.querySelector("#toStore").onclick = () => { o.remove(); UI.phone("store"); };
   } else if (kind === "ach") {
     h.textContent = "الإنجازات";
-    b.innerHTML = `<b>النهايات (${ar(Object.keys(META.ends).length)}/١٠)</b><div class="ends">${END_ORDER.map(k => `<span class="${META.ends[k] ? "got" : ""}">${META.ends[k] ? ENDS[k].h : "؟؟؟"}</span>`).join("")}</div>` +
+    const endList = (title, order) => `<b>${title} (${ar(order.filter(k => META.ends[k]).length)}/${ar(order.length)})</b><div class="ends">${order.map(k => `<span class="${META.ends[k] ? "got" : ""}">${META.ends[k] ? ENDS[k].h : "؟؟؟"}</span>`).join("")}</div>`;
+    b.innerHTML = endList("نهايات المهندس", END_ORDER) + endList("نهايات الموارد البشرية", END_ORDER_HR) +
       Object.entries(ACH).map(([k, [n, d]]) => `<div class="ach ${META.ach[k] ? "got" : ""}"><i>${ART.icon(META.ach[k] ? "trophy" : "lock")}</i><div><b>${n}</b><span>${d}</span></div></div>`).join("");
   } else {
     h.textContent = "الإعدادات";
@@ -2461,7 +2812,7 @@ UI.sheet = function (kind) {
 /* ---------- boot ---------- */
 function boot(data) {
   document.addEventListener("pointerdown", () => SND.init(), { once: true });
-  if (data && data.G) { G = data.G; UI.resume(); } else UI.title();
+  if (data && data.G) { G = data.G; setMode(G.mode || "eng"); UI.resume(); } else UI.title();
 }
 window.claude?.hot?.snapshot?.(() => ({ G }));
 window.claude?.hot?.ready ? window.claude.hot.ready(boot) : boot(window.claude?.hot?.data ?? {});
