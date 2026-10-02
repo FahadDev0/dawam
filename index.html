@@ -353,6 +353,12 @@ input { font: inherit; }
 .mode-pick button b { font-size: 15px; } .mode-pick button span { font-size: 12px; color: var(--muted); }
 .mode-pick button.on { border-color: var(--saffron); background: var(--panel2); }
 .mode-pick .new { display: inline-block; background: var(--bad); color: #fff; font-size: 10.5px; font-weight: 800; border-radius: 6px; padding: 0 6px; margin-inline-start: 6px; }
+.daycard .cond { margin-top: 16px; background: var(--panel); border: 1px solid var(--saffron); border-radius: 14px; padding: 8px 14px; max-width: 300px; display: grid; gap: 2px; }
+.daycard .cond b { color: var(--saffron); } .daycard .cond span { font-size: 13px; color: #C9D6DE; }
+.sbx { display: flex; gap: 10px; align-items: center; text-align: right; background: #0E1824cc; border: 1.5px dashed var(--line); border-radius: 16px; padding: 8px 12px; font-size: 12px; color: var(--muted); }
+.sbx b { display: block; font-size: 14px; color: var(--ink); }
+.sbx i { width: 20px; height: 20px; border-radius: 6px; border: 2px solid var(--muted); flex: none; }
+.sbx.on { border-style: solid; border-color: var(--saffron); } .sbx.on i { background: var(--saffron); border-color: var(--saffron); }
 
 </style>
 <div id="game"></div>
@@ -1619,6 +1625,163 @@ function epilogueHR() {
   return o;
 }
 
+/* ===== SANDBOX 1: background staff, small talk, generated HR tickets, daily conditions ===== */
+const pick = a => a[Math.random() * a.length | 0];
+function fmtTime(c) {
+  const h = Math.floor(c / 60) % 24, m = c % 60, h12 = ((h + 11) % 12) + 1;
+  return `${ar(h12)}:${m < 10 ? "٠" : ""}${ar(m)} ${h < 12 ? "ص" : "م"}`;
+}
+
+/* 12 colleagues from other departments, with generated looks and voices */
+const STAFF = [
+  ["g_mansour", "منصور", "المالية", "m", "يحسب كل شي بالهللة"], ["g_lama", "لمى", "التسويق", "f", "تكتب بوست LinkedIn عن كل اجتماع"],
+  ["g_khalid", "خالد", "المبيعات", "m", "يقفل الصفقات في البوفيه"], ["g_abusaad", "أبو سعد", "الأمن", "m", "يعرف مين جا متأخر قبل نظام البصمة"],
+  ["g_dima", "ديما", "المحاسبة", "f", "عندها جدول Excel حتى للغداء"], ["g_faisal", "فيصل", "الدعم الفني", "m", "حلّه لكل شي: أعد التشغيل"],
+  ["g_abeer", "عبير", "خدمة العملاء", "f", "تسمع ٢٠٠ شكوى باليوم وتبتسم"], ["g_turki", "تركي", "المشتريات", "m", "يطلب ٣ عروض أسعار حتى للقلم"],
+  ["g_sara", "سارة", "الشؤون القانونية", "f", "تقرأ الشروط والأحكام. كلها"], ["g_bandar", "بندر", "المبيعات", "m", "عنده ٣ أقساط وابتسامة دائمة"],
+  ["g_umrayan", "أم ريان", "الاستقبال", "f", "تعرف كل زائر قبل يوصل"], ["g_majed", "ماجد", "العمليات", "m", "يسوي «تحسين عمليات» لطابور البوفيه"],
+];
+const STAFF_IDS = STAFF.map(s => s[0]);
+(() => {
+  const skins = ["#C99872", "#B07E5A", "#DDB18E", "#8E5D3E", "#C08862", "#E0B694", "#A97753"];
+  const hij = ["#3C4A6B", "#6B2E3E", "#2F5D50", "#8A6A4E", "#1E1E22", "#5B4B8A", "#B77A8C"];
+  const beards = ["goatee", "stubble", "", "grey", "goatee"];
+  STAFF.forEach(([id, n, dept, sex, q], i) => {
+    ART.LOOK[id] = sex === "m"
+      ? { skin: skins[i % 7], head: i % 3 ? "shemagh" : "ghutra", beard: beards[i % 5], gl: i % 4 === 1 ? "gold" : "", cloth: "#F3F2EE", bg: ["#7FA0B8", "#C9B27A", "#8FB29A", "#B7A3C9"][i % 4], brow: beards[i % 5] === "grey" ? "#8F8A80" : "#2A1C12" }
+      : { skin: skins[(i + 2) % 7], head: "hijab", hij: hij[i % 7], cloth: "#1D1A1F", gl: i % 3 === 0 ? "black" : "", bg: ["#E3B9A6", "#A9C4D6", "#C7D2A0", "#D6B3C4"][i % 4], brow: "#3A2618" };
+    CH[id] = { n, r: dept, q, staff: 1, col: ART.LOOK[id].bg, v: { f: sex === "m" ? 130 + (i * 23) % 90 : 260 + (i * 31) % 120, w: ["triangle", "square", "sine"][i % 3], v: 0.15, vol: 0.05 }, loves: pick(Object.keys(ITEMS)), likes: [pick(Object.keys(ITEMS))], hates: [], guard: "ما أعرفه زين. أنا من قسم ثاني." };
+  });
+})();
+function staffWhere(id, d, s) {
+  if (s > 2) return null;
+  let h = 0; const k = id + d * 7 + s * 13;
+  for (const ch of k) h = (h * 31 + ch.charCodeAt(0)) % 9973;
+  if (h % 10 > 3) return null;
+  return ["floor", "kitchen", "meeting", "roof", "floor", G.mode === "hr" ? "hr" : "kitchen"][h % 6];
+}
+
+const GOSSIP = { boss: "حجز قاعة الإبداع لين نهاية السنة", nouf: "رفضت ١٢ PR أمس قبل الفطور", sultan: "عنده قروب واتساب ثاني للشركة، أنشط من الرسمي", mubarak: "يعرف راتب الكل من طريقة شربهم للشاي", reem: "رسمت المستخدم على السبورة وصار له اسم: «العم سعد»", abunayef: "عنده مفتاح غرفة ما أحد يعرف وش فيها", richard: "يحاسب على الإيميل اللي فيه «Thanks!»", haya: "سوّت استبيان عن الاستبيانات", yousef: "أكل ٥ سمبوسات وسجّلها «ساعات تدريب»", munira: "عندها نموذج رسمي للعطاس" };
+const FAVORS = ["تصوّر لي ورقة؟ الطابعة تكرهني", "شاحن آيفون؟ ثلاث دقايق بس", "رأيك في إيميل بأرسله لمديري. فيه كلمة «للأسف» مرتين", "توقّع على بطاقة تهنئة لأحد ما أعرفه", "تحجز لي مكان في الكبسة؟"];
+const HR_Q = ["هل يحق لي أطفي الكاميرا في الاجتماع؟", "كم باقي لي إجازة؟ ولا تقول «راجع النظام»", "هل الكيك في يوم التميّز إلزامي؟", "ليش بدل المواصلات أقل من سعر الموقف؟", "إذا اشتغلت بعد الدوام من البيت، تنحسب؟", "التأمين يغطي النظارات؟ قريت البوليصة ٣ مرات وما فهمت"];
+const ENG_Q = ["تقدر تشوف ليش ملف Excel حقي بطيء؟ فيه ٤٠٠ ألف صف", "الـ VPN يقطع كل ما أفتح الإيميل", "وش يعني «Error 500»؟ العميل يقول إني السبب", "الطابعة تطلع ورق فاضي. ممكن virus؟"];
+
+function staffTalk(id) {
+  const s = CH[id], L = [], c = [];
+  const kind = pick(G.st && G.met && !G.met[id] ? ["intro"] : ["gossip", "favor", "weekend", "gripe", G.mode === "hr" ? "ask" : "tech"]);
+  if (kind === "intro") { L.push(`h|هلا! أنا ${s.n} من ${s.r}.`, `#يقولون عنه إنه ${s.q}.`); c.push({ t: "تشرفت.", fx: { [id]: 4 } }, { t: "سمعت عنك.", fx: { [id]: 2 }, r: ["x|…خير إن شاء الله؟"] }); }
+  if (kind === "gossip") { const o = pick(OFFICE.filter(k => k !== "munira" || G.mode === "hr")); L.push(`تدري إن ${CH[o].n} ${GOSSIP[o]}؟`); c.push({ t: "جد؟", fx: { [id]: 3, stress: -2 } }, { t: "لا تنشر إشاعات.", fx: { [id]: -2, rep: 1 }, r: ["a|…كنت أسولف بس."] }); }
+  if (kind === "favor") { L.push(`عندك دقيقة؟ ${pick(FAVORS)}`); c.push({ t: "أكيد.", fx: { [id]: 6, energy: -3 }, r: ["h|الله يسعدك."] }, { t: "مشغول الحين.", fx: { [id]: -2 } }); }
+  if (kind === "weekend") { L.push("h|وش ناوي الويكند؟"); c.push({ t: "البر.", fx: { [id]: 2 }, r: ["h|لا تنسى الحطب. دايم أحد ينسى الحطب."] }, { t: "النوم.", fx: { [id]: 3 }, r: ["h|أعظم خطة."] }); }
+  if (kind === "gripe") { L.push(`a|الواي فاي في ${s.r} أبطأ من رد المالية على إيميل.`); c.push({ t: "أبلّغ عنه.", fx: { [id]: 3, prog: G.mode === "hr" ? 1 : 0 } }, { t: "(تضحك)", fx: { [id]: 1, stress: -2 } }); }
+  if (kind === "ask") { L.push(`x|سؤال لـ HR: ${pick(HR_Q)}`); c.push({ t: "تجاوبه بوضوح.", fx: { [id]: 4, prog: 2, energy: -2 }, r: ["h|أول جواب واضح من HR في حياتي."] }, { t: "«راجع السياسات».", fx: { [id]: -3, rep: 1 }, r: ["a|…قلت لا تقول هذا."] }); }
+  if (kind === "tech") { L.push(`x|${pick(ENG_Q)}`); c.push({ t: "تساعده.", fx: { [id]: 5, energy: -4, rep: 1 }, r: ["h|أنت أسطورة. بقول للكل."] }, { t: "«افتح تذكرة».", fx: { [id]: -2 } }); }
+  return { id: "st_" + id, npc: id, rep: 1, k: "gen", L, c };
+}
+
+/* generated HR tickets */
+const LEAVE_R = ["زواج ولد خالي", "تخرّج أختي", "سفر عائلي محجوز من أشهر", "ترتيبات بيت جديد", "«ظروف»", "مباراة الديربي"];
+const COMPLAINTS = ["يرفع صوته في المكالمات كأن العميل في الشرقية", "ياخذ أكلي من الثلاجة", "يرد على كل إيميل بـ «+1»", "يحط سماعة بدون سماعة", "يسخّن سمك في المايكرويف", "يجدول اجتماعات وقت الغداء"];
+const COURSES = ["إدارة الوقت (٣ أيام)", "Excel للمحترفين", "القيادة بالشغف", "فن قول «لا» باحترافية", "الذكاء الاصطناعي لغير المهتمين", "التفاوض مع المالية"];
+const DEPTS = ["التسويق", "المالية", "العمليات", "الشؤون القانونية", "التقنية"];
+const ODD = ["أبي كرسي يدور ٣٦٠. الحالي يدور ٣٤٠ بس.", "أبي مسمى وظيفي جديد: «نينجا البيانات».", "أبي أطلع من قروب الشركة بدون ما أحد ينتبه.", "ليش الكيك في كل مناسبة فانيلا؟ أبي تحقيق.", "أبي موقف لسكوتر كهربائي.", "أبي إجازة يوم ميلاد قطتي. اسمها «KPI».", "أبي نقل مكتبي بعيد عن الطابعة. تتكلم معي."];
+const TT = [
+  { title: "طلب إجازة", ask: () => `أبي إجازة ${pick(["يوم", "يومين", "أسبوع"])} عشان ${pick(LEAVE_R)}.`, yes: "معتمدة. استمتع.", no: "الفترة هذي ضغط. نأجلها.", form: "عبّ نموذج الإجازة (١٤ حقل)." },
+  { title: "تعريف بالراتب", ask: () => `أبي تعريف بالراتب، ${pick(["للبنك", "للسفارة", "للإيجار", "لأهل العروس"])}.`, yes: "يطلع لك اليوم.", no: "التعريفات تطلع يوم الخميس بس.", form: "يحتاج ٣ تواقيع وختم." },
+  { title: "شكوى من زميل", ask: () => `a|فيه زميل ${pick(COMPLAINTS)}.`, yes: "أجلس معكم الاثنين ونحلها.", no: "نوثّقها ونرفعها.", form: "نقترح «التواصل المباشر بين الأطراف»." },
+  { title: "طلب سلفة", ask: () => `s|أبي سلفة على الراتب. ${pick(["السيارة خربت", "القسط زاد", "إيجار البيت", "ظرف طارئ"])}.`, yes: "معتمدة على ٣ دفعات.", no: "السياسة تمنع هالربع.", form: "عبّ نموذج طلب سلفة، وأرفق كشف حساب." },
+  { title: "تظلّم من التقييم", ask: () => "a|تقييمي «يلبّي التوقعات». أنا أتجاوزها! عندي أدلة.", yes: "نعيد المراجعة مع مديرك.", no: "التقييم نهائي.", form: "التظلّم له نموذج، ومدته ٩٠ يوم." },
+  { title: "طلب دورة", ask: () => `h|أبي أحضر دورة «${pick(COURSES)}».`, yes: "معتمدة من ميزانية التدريب.", no: "ميزانية التدريب مجمّدة.", form: "قدّم «خطة تطوير ذاتي» أول." },
+  { title: "طلب نقل", ask: () => `أبي أنتقل لقسم ${pick(DEPTS)}. ${pick(["المكيّف عندهم أرحم", "ما عندهم اجتماع وقوف", "مديرهم يضحك"])}.`, yes: "أكلّم القسمين اليوم.", no: "النقل يحتاج سنتين في القسم.", form: "عبّ نموذج نقل داخلي، وموافقة المديرين." },
+  { title: "طلب غريب", ask: () => `x|${pick(ODD)}`, yes: "معتمد. ليش لا.", no: "للأسف ما فيه سياسة تسمح.", form: "نرفعه للجنة." },
+];
+let genSeq = 0;
+function genTicket() {
+  const pool = [...STAFF_IDS, ...STAFF_IDS, "sultan", "nouf", "mubarak", "reem", "abunayef", "yousef", "boss", "richard"];
+  const who = pick(pool), T = pick(TT), tw = pick(["", "", "urgent", "wasta", "sincere", "sincere", "missing"]);
+  const yes = { [who]: 5, prog: 3, rep: -1 }, no = { [who]: -4, prog: -2, rep: 2 }, form = { [who]: -2, prog: -1, rep: 1 };
+  const L = [T.ask()];
+  if (tw === "urgent") { L.push("#مختوم «مستعجل جدًا». ثلاث مرات."); [yes, no, form].forEach(f => f.stress = 2); }
+  if (tw === "wasta") { L.push("#مرفق: «توصية من مكتب نائب الرئيس»."); Object.assign(yes, { rep: 3, prog: -4 }); Object.assign(no, { rep: -5, prog: 3 }); }
+  if (tw === "sincere") { L[0] = L[0].replace(/^[nhasx]\|/, ""); L[0] = "s|" + L[0]; L.push("s|الموضوع… ظروف. ما أبي أشرح أكثر."); Object.assign(yes, { [who]: 10, prog: 4 }); Object.assign(no, { [who]: -8, prog: -4 }); }
+  if (tw === "missing") { L.push("#الطلب ناقص: ما فيه توقيع ولا مرفقات."); Object.assign(yes, { rep: -3 }); Object.assign(form, { rep: 2, [who]: -1 }); }
+  const id = "pt" + G.day + "_" + (++genSeq) + "_" + (Math.random() * 1e4 | 0);
+  const node = { id, pm: "hr", npc: who, k: "tix", gen: 1, title: `${T.title} · ${CH[who].n}`, L,
+    c: [{ t: T.yes, fx: yes, r: [`h|${pick(["الله يسعدك!", "أخيرًا!", "كذا HR ولا بلاش!"])}`] },
+        { t: T.no, fx: no, r: [`s|${pick(["…طيب.", "عادي. متعوّدين.", "حتى أنت؟"])}`] },
+        { t: T.form, fx: form, r: [`a|${pick(["نموذج… طبعًا.", "أبي أشوف وجه اللي صمّم النموذج.", "١٤ حقل؟!"])}`] }] };
+  G.genN = G.genN || {}; G.genN[id] = node;
+  return id;
+}
+
+/* random daily conditions */
+const CONDS = [
+  { id: "dust", n: "يوم غبار", d: "الرياض برتقالية. الكل متأخر ومتنرفز.", fx: { stress: 5 } },
+  { id: "ac", n: "المكيّف خربان", d: "الطابق ٣٠ درجة. الطاقة تذوب.", fx: { energy: -10 } },
+  { id: "vp", n: "نائب الرئيس في المبنى", d: "الكل يكتب بسرعة، حتى اللي ما عنده شغل.", fx: { rep: 2 } },
+  { id: "quiet", n: "هدوء غريب", d: "ولا اجتماع في التقويم. مريب.", fx: { stress: -6 } },
+  { id: "samosa", n: "سمبوسة مجانية", d: "أحد عزم الطابق كامل. البوفيه زحمة.", fx: { energy: 6 } },
+  { id: "wifi", n: "الإنترنت بطيء", d: "كل شي ياخذ وقت أطول بنص.", fx: { stress: 3 }, slow: 1 },
+  { id: "meetings", n: "عاصفة اجتماعات", d: "التقويم أحمر. حتى البوفيه فيه دعوة.", fx: { stress: 4 } },
+  { id: "bonus", n: "إشاعة مكافأة", d: "الكل مبسوط. ما أحد يعرف مصدر الإشاعة.", fx: { prog: 3 } },
+  { id: "finger", n: "نظام البصمة خربان", d: "الكل «متأخر» رسميًا. حتى اللي جا ٦ الصبح.", fx: { stress: 3 } },
+  { id: "walk", n: "تحدي المشي", d: "هيا وزّعت عدّادات خطوات. الكل يمشي في الممر بلا سبب.", fx: { energy: 4 } },
+];
+const PROJECTS = ["«طلبك بضغطة ٢.٠»", "«ادفع لاحقًا… أو قبل»", "«محفظة سهل»", "«الموظف الذكي»", "«بوابة الموردين»", "«سهل للأعمال»"];
+
+/* ===== SANDBOX 2: micro-events that interrupt the day ===== */
+const MICRO = [];
+const mic = (pm, id, t, npc, L, c, extra) => MICRO.push({ id, pm, k: "micro", t, npc, L, c, ...(extra || {}) });
+
+/* everyone */
+mic("all", "m_printer", 10, null, ["#الطابعة طبعت ٢٠٠ نسخة من عرض ريتشارد. بالألوان. على حساب الشركة."], [{ t: "توقفها.", fx: { energy: -2, rep: 1 } }, { t: "تاخذ نسخة للذكرى.", fx: { stress: -3 } }]);
+mic("all", "m_dates", 5, null, ["#علبة تمر في البوفيه مكتوب عليها «للجميع». باقي ٣ حبات."], [{ t: "تاخذ وحدة.", fx: { energy: 3 } }, { t: "تخليها للعم مبارك.", fx: { mubarak: 3 } }]);
+mic("all", "m_wifi", 15, null, ["#الواي فاي طاح. نص الطابق صار يسولف مع بعض لأول مرة من شهور."], [{ t: "تسولف معهم.", fx: { stress: -4, prog: 1 } }, { t: "تشغّل نقطة اتصال من جوالك.", fx: { energy: -2, rep: 1 } }]);
+mic("all", "m_vp_walk", 5, null, ["#نائب الرئيس يمر في الممر. فجأة الكل يكتب بسرعة."], [{ t: "تكتب بسرعة معهم.", fx: { rep: 1, stress: 1 } }, { t: "تسلّم عليه.", fx: { rep: 2 }, r: ["#رد السلام. وسأل عن اسمك. ونساه بعد ثانيتين."] }]);
+mic("all", "m_spam", 5, null, ["#مكالمة من رقم غريب: «مبروك! فزت بسيارة. بس نحتاج رقم البطاقة»."], [{ t: "تقفل.", fx: {} }, { t: "تقول له يكلم المالية.", fx: { stress: -2 }, r: ["#قفل هو."] }]);
+mic("all", "m_fish", 5, null, ["#أحد يسخّن سمك في المايكرويف. الطابق كله عرف."], [{ t: "تفتح الشباك.", fx: { stress: -1 } }, { t: "تكتب ورقة على المايكرويف.", fx: { rep: 1 }, r: ["#الورقة اختفت خلال ساعة. والسمك رجع بكرة."] }]);
+mic("all", "m_blink", 10, "abunayef", ["#الكهرباء رمشت. أبو نايف يركض في الممر.", "x|محد يلمس شي!"], [{ t: "تركض معه.", fx: { abunayef: 3, energy: -3 } }, { t: "ما تلمس شي.", fx: { abunayef: 1 } }]);
+mic("all", "m_bday", 5, "haya", ["h|يوم ميلاد أحد في الدور الثالث! نجمع ٢٠ ريال للكيك."], [{ t: "تدفع ٢٠.", fx: { money: -20, haya: 3, prog: 1 } }, { t: "«آخر الشهر يا هيا».", fx: { haya: -1 } }], { when: () => G.money >= 20 });
+mic("all", "m_mom_video", 5, null, ["#الوالدة أرسلت مقطع «فوائد الكمون». مدته ٧ دقايق."], [{ t: "تشوفه كامل.", fx: { mom: 3, stress: -2 } }, { t: "ترد بقلب.", fx: { mom: 1 } }]);
+mic("all", "m_saffron", 5, "mubarak", ["h|جرّب الشاي الجديد. بالزعفران. لا تقول لأحد."], [{ t: "تشربه.", fx: { energy: 5, mubarak: 2 } }]);
+mic("all", "m_elevator", 10, null, ["#المصعد يقول «الحمولة زائدة». فيه شخصين وكرتون سمبوسة."], [{ t: "تطلع الدرج.", fx: { energy: -3, stress: -2 } }, { t: "تنتظر.", fx: { stress: 2 } }]);
+mic("all", "m_noreply", 5, null, ["#إيميل من «noreply». فيه سؤال. ويطلب منك ترد."], [{ t: "ترد.", fx: { stress: 1 }, r: ["#الرد رجع: «هذا البريد لا يستقبل الرسائل»."] }, { t: "تتجاهل.", fx: {} }]);
+mic("all", "m_sultan_snap", 5, "sultan", ["h|شفت؟ ريتشارد يتصوّر سيلفي مع المكيّف!"], [{ t: "(تضحك)", fx: { sultan: 2, stress: -3 } }, { t: "«خلّنا نشتغل»", fx: { sultan: -1, rep: 1 } }]);
+mic("all", "m_parking", 10, null, ["#أحد واقف خلف سيارتك. رقم جواله على الطبلون: «اتصل إذا ضرورة»."], [{ t: "تتصل.", fx: { stress: 2 }, r: ["#«دقيقتين». صارت ٢٠."] }, { t: "تنتظر لين يطلع.", fx: { stress: 3 } }], { when: () => G.slot === 2 });
+mic("all", "m_quote", 5, "boss", ["h|اقتباس اليوم: «الفريق الناجح ما ينام». أرسلته للقروب."], [{ t: "تحط ❤️.", fx: { boss: 2 } }, { t: "«والفريق التعبان؟»", fx: { boss: -2, sultan: 2 } }]);
+mic("all", "m_ac_war", 10, null, ["#حرب المكيّف: واحد حطه ١٦، وثاني حطه ٢٨. الريموت مختفي."], [{ t: "تحطه ٢٣ وتخبي الريموت.", fx: { stress: -2, prog: 1 } }, { t: "تنسحب.", fx: {} }]);
+mic("all", "m_richard_coffee", 5, "richard", ["h|Habibi, coffee? My treat. I mean… the project's treat."], [{ t: "يلا.", fx: { richard: 3, energy: 3 } }, { t: "عندي شاي العم مبارك.", fx: { mubarak: 2, richard: -1 } }]);
+mic("all", "m_lost_card", 5, null, ["#لقيت بطاقة موظف في الممر. الصورة من ٢٠١١."], [{ t: "توصلها للاستقبال.", fx: { rep: 1, g_umrayan: 3 } }, { t: "تحطها في البوفيه.", fx: {} }]);
+
+/* HR */
+mic("hr", "h_quick", 20, null, ["#موظف واقف عند الباب: «بس سؤال سريع…». السؤال ياخذ ٢٠ دقيقة."], [{ t: "تجاوبه.", fx: { prog: 2, energy: -3 } }, { t: "«أرسله إيميل».", fx: { prog: -1, rep: 1 } }], { rep: 1 });
+mic("hr", "h_cat", 5, null, ["#إيميل: «هل يحق لي إجازة يوم ميلاد قطتي؟» مرفق صورة القطة."], [{ t: "«معتمد. القطة جميلة»", fx: { prog: 2, rep: -1 } }, { t: "«للأسف لا»", fx: { rep: 1 } }]);
+mic("hr", "h_smiles", 10, "munira", ["a|ليش ما وصلني «تقرير الابتسامات» الأسبوعي؟"], [{ t: "ترسل أرقام تقريبية.", fx: { rep: 2, munira: 2, stress: 1 } }, { t: "«ما فيه ابتسامات هالأسبوع»", fx: { rep: -2, prog: 1, munira: -3 } }]);
+mic("hr", "h_comment", 5, null, ["#تعليق في الاستبيان: «HR = Human Remover»."], [{ t: "(تضحك)", fx: { stress: -2 } }, { t: "تحطه في التقرير.", fx: { prog: 1, munira: -1 } }]);
+mic("hr", "h_fire_joke", 15, "boss", ["a|أبي أفصل واحد من فريقي. ما يضحك على نكتي."], [{ t: "«مو سبب نظامي»", fx: { prog: 3, boss: -3 } }, { t: "«نسوي جلسة توجيه… له»", fx: { rep: 1, prog: -2, boss: 2 } }]);
+mic("hr", "h_cry", 25, null, ["#موظف قاعد في البوفيه لحاله، وباين عليه متضايق."], [{ t: "تجلس معه وتسمع.", fx: { prog: 3, energy: -5, stress: 2 } }, { t: "ترسل له رابط الاستبيان.", fx: { prog: -3 } }]);
+mic("hr", "h_payroll", 15, null, ["#كشف الرواتب انطبع على الطابعة المشتركة!"], [{ t: "تركض وتاخذه.", fx: { energy: -4, rep: 3 } }, { t: "تمشي ببطء.", fx: { prog: -4, stress: 4 }, r: ["#الحين الكل يعرف راتب الكل. البوفيه صار متوتر."] }]);
+mic("hr", "h_golf", 5, "richard", ["Can HR approve my «wellness stipend»? It's for golf."], [{ t: "مرفوض.", fx: { richard: -3, prog: 1 } }, { t: "معتمد.", fx: { richard: 5, rep: -2, prog: -2 } }]);
+mic("hr", "h_finger", 5, null, ["#نظام البصمة يقول إنك متأخر. أنت واقف قدّامه من ٧:٠٠."], [{ t: "تفتح تذكرة.", fx: { stress: 1 } }, { t: "تعتمد تأخيرك بنفسك.", fx: { rep: -1, stress: -2 } }]);
+mic("hr", "h_interview", 30, null, ["#مقابلة توظيف. المرشح سأل «كم يوم أشتغل من البيت؟» قبل ما يجلس."], [{ t: "تقبله. صريح على الأقل.", fx: { prog: 2, rep: -1 } }, { t: "«نتواصل معك»", fx: { rep: 1 } }]);
+mic("hr", "h_none", 5, "haya", ["s|أحد كتب «لا يوجد» في كل خانات الاستبيان. ٦٠ خانة."], [{ t: "«على الأقل كمّله»", fx: { haya: 2, stress: -1 } }]);
+mic("hr", "h_vp_list", 10, null, ["#طلب عاجل من نائب الرئيس: «أبي أسماء اللي ما حضروا يوم التميّز»."], [{ t: "ترسلها.", fx: { rep: 3, prog: -3 } }, { t: "«النظام ما سجّل الحضور»", fx: { rep: -2, prog: 2 } }]);
+mic("hr", "h_leave_types", 10, null, ["#سؤال: «وش الفرق بين إجازة اضطرارية وإجازة طارئة؟»"], [{ t: "«ما أدري. بسأل»", fx: { prog: 1 } }, { t: "تشرح ١٠ دقايق.", fx: { energy: -2, rep: 1 } }]);
+mic("hr", "h_walkin", 15, null, ["#مدير قسم يبي «يرقّي» موظف عشان «يحفظ تواريخ ميلاد الكل»."], [{ t: "«نحتاج معايير»", fx: { rep: 1, prog: 1 } }, { t: "معتمد.", fx: { rep: -2, prog: 2 } }]);
+mic("hr", "h_new_hire", 20, null, ["#موظف جديد وصل اليوم. ما عنده لابتوب ولا مكتب ولا بطاقة. عنده ابتسامة بس."], [{ t: "ترتب له كل شي بنفسك.", fx: { prog: 3, energy: -6 } }, { t: "ترسله لتقنية المعلومات.", fx: { prog: -1 } }]);
+mic("hr", "h_policy_q", 10, "munira", ["h|أبي سياسة جديدة لـ«ارتداء الأحذية الرياضية». قبل بكرة."], [{ t: "تكتبها.", fx: { rep: 2, energy: -3, munira: 2 } }, { t: "«وش المشكلة في الأحذية؟»", fx: { munira: -2, prog: 1 }, r: ["a|…ما فيه مشكلة. عشان كذا نحتاج سياسة."] }]);
+
+/* engineer */
+mic("eng", "e_build", 15, null, ["#الـ build فشل. السبب: مسافة زيادة في ملف YAML."], [{ t: "تصلحها.", fx: { prog: 1, energy: -2 } }, { t: "تعيد التشغيل وتدعي.", fx: { stress: 2 }, r: ["#اشتغل. ما أحد يعرف ليش."] }]);
+mic("eng", "e_main", 10, "nouf", ["a|مين سوّى push على main بدون review؟!"], [{ t: "«أنا…»", fx: { nouf: -2, rep: 1 }, r: ["a|…على الأقل صادق. لا تعيدها."] }, { t: "(تسكت)", fx: { nouf: -1, stress: 2 } }]);
+mic("eng", "e_jira", 5, null, ["#تذكرة جيرا جديدة: «الزر أزرق زيادة». أولوية: حرجة."], [{ t: "تغير اللون درجة.", fx: { prog: 1 } }, { t: "تحطها «Backlog».", fx: { stress: -1 } }]);
+mic("eng", "e_cpu", 15, null, ["#تنبيه: CPU على ٩٨٪. السبب: ريتشارد فاتح ٤٠ تبويب على الـ VPN."], [{ t: "تكلمه.", fx: { richard: -1, prog: 1 } }, { t: "تتركه. يمكن يتعلم.", fx: { stress: 2 } }]);
+mic("eng", "e_vim", 10, "yousef", ["x|كيف أطلع من vim؟ لي ٢٠ دقيقة داخل."], [{ t: "تعلّمه :q!", fx: { yousef: 3 } }, { t: "«ما أحد يعرف»", fx: { yousef: 1, stress: -2 } }], { when: () => G.day >= 2 });
+mic("eng", "e_review", 10, null, ["#وصل ٢٣ تعليق على PR فيه سطرين."], [{ t: "تقراها كلها.", fx: { prog: 1, stress: 2 } }, { t: "ترد «Done» على الكل.", fx: { nouf: -2 } }]);
+mic("eng", "e_so", 15, null, ["#Stack Overflow نزل. الطابق كله وقف وصار يطالع بعض."], [{ t: "تقرا التوثيق الرسمي.", fx: { prog: 2, energy: -3 } }, { t: "تروح البوفيه.", fx: { energy: 3 } }]);
+mic("eng", "e_meet", 30, "boss", ["h|تعال تعال، اجتماع سريع. خمس دقايق."], [{ t: "تروح.", fx: { boss: 2, energy: -4, stress: 2 }, r: ["#كان ٣٥ دقيقة. ما فيه جدول أعمال."] }, { t: "«عندي deploy»", fx: { boss: -1 } }]);
+mic("eng", "e_prod", 20, null, ["#الإنتاج يطلع خطأ ٥٠٠ لـ ٣ مستخدمين. كلهم من نفس العائلة في تبوك."], [{ t: "تتبع المشكلة.", fx: { prog: 2, energy: -4, rep: 1 } }, { t: "تقول «عندي يشتغل».", fx: { reem: -2 } }]);
+
 /* ===== ENGINE: state, rules, time, messages, achievements ===== */
 const SAVE_KEY = "dawam2-save", META_KEY = "dawam2-meta";
 let G = null;
@@ -1626,11 +1789,11 @@ const META = { ach: {}, ends: {}, runs: 0 };
 try { Object.assign(META, JSON.parse(localStorage.getItem(META_KEY) || "{}")); } catch (e) {}
 function saveMeta() { try { localStorage.setItem(META_KEY, JSON.stringify(META)); } catch (e) {} }
 
-function fresh(name, mode) {
+function fresh(name, mode, sandbox) {
   mode = mode || "eng"; setMode(mode);
   return {
-    v: 2, mode, tix: TIX_FOR(1, mode), tixDone: 0, name: name || "عبدالله", day: 1, slot: 0, energy: 80, stress: 20, prog: mode === "hr" ? 50 : 0, rep: 50, money: 340,
-    aff: Object.fromEntries(NPCS.map(k => [k, 0])), flags: {}, seen: {}, facts: {}, inv: { samosa: 1 }, met: {},
+    v: 2, mode, sandbox: !!sandbox, clock: 450, cond: null, genN: {}, lastMicro: null, wkDone: {}, project: PROJECTS[0], tix: TIX_FOR(1, mode), tixDone: 0, name: name || "عبدالله", day: 1, slot: 0, energy: 80, stress: 20, prog: mode === "hr" ? 50 : 0, rep: 50, money: 340,
+    aff: Object.fromEntries([...NPCS, ...STAFF_IDS].map(k => [k, 0])), flags: {}, seen: {}, facts: {}, inv: { samosa: 1 }, met: {},
     texts: [], mails: [], st: { meetings: 0, bugs: 0, gifts: 0, wfh: 0, calls: 0, hots: {} },
     giftDay: {}, hotDay: {}, srvDay: 0, callDay: 0, capWarned: false,
     log: [], phase: "play", endKey: null, evDone: {}, weekend: false, ach: {},
@@ -1643,7 +1806,20 @@ function clearSave() { try { localStorage.removeItem(SAVE_KEY); } catch (e) {} }
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const ar = n => new Intl.NumberFormat("ar-SA-u-nu-arab").format(n);
 const A = id => (G.aff[id] || 0);
-const byId = id => N.find(n => n.id === id);
+const byId = id => N.find(n => n.id === id) || (G && G.genN && G.genN[id]) || MICRO.find(m => m.id === id);
+const slotOf = c => c < 660 ? 0 : c < 825 ? 1 : c < 960 ? 2 : 3;
+const COST = { work: 90, wfh: 120, meet: 60, tea: 15, server: 45, breathe: 20, cafe: 90, ticket: 40, stamp: 50, walk: 20 };
+function dayStart() {
+  G.cond = null;
+  if (G.day > 1 && Math.random() < 0.75) { const c = pick(CONDS); G.cond = c.id; applyFx(c.fx); }
+  if (G.mode === "hr") { const n = G.day === 1 ? 1 : 2 + (Math.random() < 0.5 ? 1 : 0); for (let i = 0; i < n; i++) G.tix.push(genTicket()); }
+}
+function pickMicro(chance) {
+  if (Math.random() > (chance == null ? (G.cond === "vp" || G.cond === "meetings" ? 0.55 : 0.42) : chance)) return null;
+  const pool = MICRO.filter(m => (m.pm === "all" || m.pm === G.mode) && m.id !== G.lastMicro && (m.rep || !G.seen[m.id] || (G.sandbox && G.day - ((G.microDay || {})[m.id] || 0) >= 8)) && (!m.when || m.when()) && (!m.npc || !CH[m.npc] || G.aff[m.npc] != null));
+  return pool.length ? pick(pool) : null;
+}
+const needWeekend = () => G.day > 1 && (G.day - 1) % 5 === 0 && !G.wkDone[G.day];
 function level(v) { return v <= -30 ? "متوترة" : v < 0 ? "باردة" : v < 15 ? "زميل" : v < 35 ? "معرفة طيبة" : v < 60 ? "صديق" : "حليف"; }
 const hasF = f => !f || [].concat(f).every(x => G.flags[x]);
 const noF = f => !f || [].concat(f).every(x => !G.flags[x]);
@@ -1770,8 +1946,8 @@ function workFx(score, home) {
   if (G.flags.saw_users) g += 1;
   if (G.flags.boss_ally) g += 1;
   if (G.energy < 20) g = Math.ceil(g / 2);
-  g = Math.max(1, Math.round(g * (0.6 + 0.8 * score)));
-  return home ? { prog: g, energy: -10, stress: 15 - Math.round(score * 4) } : { prog: g, energy: -12, stress: Math.round(10 - score * 5) };
+  g = Math.max(1, Math.round(g * (0.6 + 0.8 * score) * 0.42));
+  return home ? { prog: g + 1, energy: -10, stress: 12 - Math.round(score * 4) } : { prog: g, energy: -9, stress: Math.round(7 - score * 4) };
 }
 const progBlocked = () => G.mode !== "hr" && !G.flags.db_access && G.prog >= 70;
 
@@ -1800,7 +1976,7 @@ function buy(item) {
 function askAbout(a, b) {
   const open = CH[a].guard === null || A(a) >= 15;
   if (!open) return { line: "n|" + CH[a].guard, open: false };
-  const ln = OPIN[a][b];
+  const ln = OPIN[a] && OPIN[a][b] || (GOSSIP[b] ? `سمعت إن ${CH[b].n} ${GOSSIP[b]}.` : "ما أعرفه زين.");
   applyFx({ [a]: 1 });
   return { line: /^[nhasx]\|/.test(ln) ? ln : "n|" + ln, open: true };
 }
@@ -1820,7 +1996,7 @@ function doWeekend(i) {
   if (fx.energy === 100) { G.energy = 100; delete fx.energy; }
   if (fx.clear) { G.tixDone += pendingTix().length; G.tix = []; delete fx.clear; }
   const ch = applyFx(fx);
-  G.weekend = true; G.phase = "play"; logLine(o.m, ch); save();
+  G.weekend = true; G.wkDone[G.day] = 1; G.phase = "play"; logLine(o.m, ch); save();
   return { o, ch };
 }
 
@@ -1828,15 +2004,17 @@ function doWeekend(i) {
 function night() {
   const sleep = G.flags._early ? 48 : 30; delete G.flags._early;
   G.energy = clamp(G.energy + sleep, 0, 100);
-  G.stress = clamp(G.stress + (G.day >= 7 ? 6 : G.day >= 4 ? 3 : -2) - (G.flags.standup_cut ? 2 : 0), 0, 100);
+  G.stress = clamp(G.stress + ((G.day - 1) % 10 + 1 >= 7 ? 5 : (G.day - 1) % 10 + 1 >= 4 ? 2 : -2) - (G.flags.standup_cut ? 2 : 0), 0, 100);
   if (G.day === 1) unlock("first_day");
   if (G.mode === "hr") {
     const p = pendingTix().length;
     if (p === 0) unlock("inbox");
-    if (p) { G.stress = clamp(G.stress + p * 3, 0, 100); G.prog = clamp(G.prog - p * 2, 0, 100); logLine(`${p} طلبات بقت معلّقة. الناس بدت تتكلم.`, [{ k: "prog", t: STATN.prog, v: -p * 2, good: false }]); }
+    const pp = Math.min(p, 6);
+    if (p) { G.stress = clamp(G.stress + pp * 2, 0, 100); G.prog = clamp(G.prog - pp * 2, 0, 100); logLine(`${ar(p)} طلبات بقت معلّقة. الناس بدت تتكلم.`, [{ k: "prog", t: STATN.prog, v: -pp * 2, good: false }]); }
   }
-  G.day++; G.slot = 0; G.hotDay = {};
+  G.day++; G.slot = 0; G.clock = 450; G.hotDay = {};
   if (G.mode === "hr") G.tix = [...(G.tix || []), ...TIX_FOR(G.day, "hr")];
+  dayStart();
 }
 function recordEnding(k) {
   G.phase = "ending"; G.endKey = k;
@@ -2166,13 +2344,13 @@ function availLocs() {
   const eve = G.slot === 3;
   return Object.keys(LOCS).filter(k => !!LOCS[k].eve === eve && (k !== "istiraha" || where("sultan", G.day, G.slot) === "istiraha"));
 }
-const occupants = loc => OFFICE.filter(id => where(id, G.day, G.slot) === loc);
+const occupants = loc => [...OFFICE.filter(id => where(id, G.day, G.slot) === loc), ...STAFF_IDS.filter(id => staffWhere(id, G.day, G.slot) === loc)];
 const mood = id => A(id) >= 35 ? "h" : A(id) < 0 ? "a" : "n";
 
 function tabHTML(l) {
   const ppl = occupants(l), fresh = ppl.some(id => hasNew(id, l)) || (l === "hr" && G.mode === "hr" && pendingTix().length > 0);
   return `<button class="loc-tab ${l === curLoc ? "on" : ""}" data-l="${l}">${fresh ? `<i class="dot"></i>` : ""}<b>${LOCS[l].n}</b>
-    <span class="who">${ppl.length ? ppl.map(id => ART.portrait(id, "n", { round: 1 })).join("") : `<span class="none">ما فيه أحد</span>`}</span></button>`;
+    <span class="who">${ppl.length ? ppl.slice(0, 4).map(id => ART.portrait(id, "n", { round: 1 })).join("") : `<span class="none">ما فيه أحد</span>`}</span></button>`;
 }
 
 UI.renderPlay = function () {
@@ -2209,7 +2387,7 @@ UI.renderHud = function (full) {
     h.innerHTML = `<div class="hud-row"><div class="when"><b>اليوم ${ar(G.day)}</b><span id="hWhen"></span></div><div class="money num">${ART.icon("coin")}<span id="hMoney"></span></div></div>
       <div class="meters">${meter("energy", "bolt")}${meter("stress", "pulse")}${meter("prog", "chart")}${meter("rep", "star")}</div><div class="slots" id="hSlots"></div>`;
   }
-  $("#hWhen").textContent = `${DAYN[(G.day - 1) % 5]} · ${SLOTN[G.slot]} ${SLOTT[G.slot]}`;
+  $("#hWhen").textContent = `${DAYN[(G.day - 1) % 5]} · ${fmtTime(G.clock)}`;
   $("#hMoney").textContent = ar(G.money) + " ر.س";
   ["energy", "stress", "prog", "rep"].forEach(k => {
     const m = h.querySelector(`.meter.${k}`); m.querySelector("i").style.width = G[k] + "%";
@@ -2227,7 +2405,7 @@ function renderStage() {
   const empty = G.slot === 3 && curLoc === "home" ? "البيت هادي. الوالدة على الجوال إذا تبي تكلمها." : "ما فيه أحد هنا الحين. جرّب تضغط على الأشياء.";
   st.innerHTML = `<div class="scene-wrap">${ART.scene(curLoc, G.slot)}</div><div class="tint" style="background:${tint}"></div>
     <div class="loc-plate"><b>${LOCS[curLoc].n}</b><small>${LOCS[curLoc].d}</small></div>
-    <div class="actors">${ppl.map(id => `<button class="actor" data-n="${id}" aria-label="كلّم ${CH[id].n}">${hasNew(id, curLoc) ? `<span class="bubble">${ART.emote("excl")}</span>` : ""}${ART.portrait(id, mood(id))}<span class="tag">${CH[id].n}<em>${level(A(id))}</em></span></button>`).join("")}</div>
+    <div class="actors">${ppl.slice(0, 3).map(id => `<button class="actor" data-n="${id}" aria-label="كلّم ${CH[id].n}">${hasNew(id, curLoc) ? `<span class="bubble">${ART.emote("excl")}</span>` : ""}${ART.portrait(id, mood(id))}<span class="tag">${CH[id].n}<em>${level(A(id))}</em></span></button>`).join("")}</div>
     ${ppl.length ? "" : `<div class="empty-stage">${empty}</div>`}`;
   st.querySelectorAll(".actor").forEach(b => b.onclick = () => { if (busy) return; SND.play("select"); UI.visit(b.dataset.n); });
   st.querySelectorAll("rect.hot").forEach(h => h.addEventListener("click", e => { e.stopPropagation(); if (!busy) showHot(h.dataset.hot); }));
@@ -2276,7 +2454,7 @@ function actDisabled(k) {
 function renderActs() {
   const acts = actsFor(curLoc), box = $("#acts");
   if (!acts.length) { box.innerHTML = `<div class="hint">${occupants(curLoc).length ? "اضغط على أي شخص عشان تكلمه" : "مكان هادي. اضغط على الأشياء في المشهد"}</div>`; return; }
-  box.innerHTML = acts.map(a => { const dis = actDisabled(a.k); return `<button class="act" data-k="${a.k}" ${dis ? "disabled" : ""}>${a.t}<small>${dis || a.h}</small></button>`; }).join("");
+  box.innerHTML = acts.map(a => { const dis = actDisabled(a.k); return `<button class="act" data-k="${a.k}" ${dis ? "disabled" : ""}>${a.t}<small>${dis || a.h}${COST[a.k] && !dis ? ` · ${ar(COST[a.k])} د` : ""}</small></button>`; }).join("");
   box.querySelectorAll(".act").forEach(b => b.onclick = () => { if (!b.disabled && !busy) doAct(b.dataset.k); });
 }
 async function doAct(k) {
@@ -2319,22 +2497,35 @@ async function doAct(k) {
   else if (k === "cafe") { ch = applyFx({ money: -25, stress: -12, energy: -2 }); SND.play("sip"); msg = "فصلين من رواية، وكوب V60. رجعت إنسان."; }
   logLine(msg, ch); UI.renderHud(); UI.floatFx(ch);
   if (progBlocked() && !G.capWarned) { G.capWarned = true; UI.toast("التقدّم وقف عند ٧٠٪. الباقي يحتاج صلاحية قاعدة البيانات من أبو نايف."); }
-  await sleep(900);
+  await sleep(700);
   busy = false;
-  UI.endSlot();
+  UI.passTime(k === "sleep" ? Math.max(10, 1380 - G.clock) : COST[k] || 30);
 }
 
 /* ---------- time flow ---------- */
-UI.endSlot = async function () {
+UI.passTime = async function (mins) {
   if (G.stress >= 100) return UI.ending("burnout");
-  G.slot++;
-  if (G.day === 10 && G.slot === 2) return UI.runLaunch();
-  if (G.slot > 3) {
+  if (G.sandbox && G.rep <= 0) return UI.ending(G.mode === "hr" ? "hr_people" : "archive");
+  if (G.cond === "wifi" && G.clock < 960) mins = Math.round(mins * 1.5);
+  const prev = G.slot;
+  G.clock += mins;
+  if (G.day % 10 === 0 && prev < 2 && G.clock >= 825 && !G.evDone["L" + G.day]) { G.evDone["L" + G.day] = 1; G.clock = Math.max(G.clock, 825); G.slot = 2; return UI.runLaunch(); }
+  if (G.clock >= 1380) {
     night();
-    if (G.day === 6 && !G.weekend) { G.phase = "weekend"; save(); return UI.weekend(); }
-    save(); await UI.dayCard();
+    if (needWeekend()) { G.phase = "weekend"; save(); return UI.weekend(); }
+    save(); await UI.dayCard(); return UI.beginSlot();
   }
-  save(); UI.beginSlot();
+  G.slot = slotOf(G.clock);
+  if (G.slot !== prev) { save(); return UI.beginSlot(); }
+  busy = true; save(); UI.renderPlay();
+  await UI.interrupts();
+  busy = false; save(); UI.renderPlay();
+};
+UI.endSlot = function () { const next = [660, 825, 960, 1380][G.slot] || 1380; return UI.passTime(Math.max(10, next - G.clock)); };
+UI.interrupts = async function (chance) {
+  if (G.mode === "hr" && G.clock < 960 && Math.random() < 0.3) { const id = genTicket(); G.tix.push(id); SND.play("notify"); UI.toast(`طلب جديد: ${byId(id).title}`, ART.icon("mail")); UI.renderPlay(); }
+  const m = pickMicro(chance);
+  if (m) { await sleep(450); await UI.runNode(m, { event: true }); G.lastMicro = m.id; (G.microDay = G.microDay || {})[m.id] = G.day; G.clock = Math.min(G.clock + (m.t || 10), 1379); G.slot = slotOf(G.clock); }
 };
 UI.beginSlot = async function () {
   G.phase = "play"; curLoc = null; busy = true;
@@ -2347,11 +2538,12 @@ UI.beginSlot = async function () {
   }
   if (G.slot === 0 && !G.evDone[G.day]) {
     G.evDone[G.day] = 1; save();
-    const n = ((G.mode === "hr" ? EVD_HR : EVD)[G.day] || []).map(byId).find(x => x && ok(x));
-    if (n) { await sleep(350); const r = await UI.runNode(n, { event: true }); if (G.phase !== "play") return; if (r && r.skip) { busy = false; return UI.endSlot(); } }
+    const n = (G.day <= 10 ? (G.mode === "hr" ? EVD_HR : EVD)[G.day] || [] : []).map(byId).find(x => x && ok(x));
+    if (n) { await sleep(350); const r = await UI.runNode(n, { event: true }); if (G.phase !== "play") return; if (r && r.skip) { busy = false; return UI.passTime(150); } }
   } else {
     const r = pickRandomEvent();
     if (r) { await sleep(500); await UI.runNode(r, { event: true }); if (G.phase !== "play") return; }
+    else if (G.slot < 3) await UI.interrupts(0.5);
   }
   if (G.slot === 3) {
     const c = pickIncomingCall();
@@ -2369,13 +2561,14 @@ UI.beginSlot = async function () {
 UI.dayCard = function () {
   return new Promise(res => {
     SND.play("day");
-    const left = 10 - G.day;
-    const leftTxt = left <= 0 ? "يوم الإطلاق" : left === 1 ? "باقي يوم واحد على الإطلاق" : left === 2 ? "باقي يومين على الإطلاق" : `باقي ${ar(left)} أيام على الإطلاق`;
-    const o = overlay("daycard", `<div class="big num">${ar(G.day)}</div><h2>${DAYN[(G.day - 1) % 5]}${G.day > 5 ? " · الأسبوع الثاني" : ""}</h2><p>${leftTxt}</p>
-      <div class="count">${Array.from({ length: 10 }, (_, i) => `<span class="${i < G.day ? "done" : ""}"></span>`).join("")}</div><div class="news">${(G.mode === "hr" ? NEWS_HR : NEWS)[G.day - 1] || ""}</div>`);
+    const cd = (G.day - 1) % 10 + 1, left = 10 - cd, goal = G.mode === "hr" ? (G.day > 10 ? "التقييم الربعي" : "حفل الإطلاق") : "الإطلاق";
+    const leftTxt = left <= 0 ? `اليوم: ${goal}` : left === 1 ? `باقي يوم واحد على ${goal}` : left === 2 ? `باقي يومين على ${goal}` : `باقي ${ar(left)} أيام على ${goal}`;
+    const cond = G.cond && CONDS.find(c => c.id === G.cond);
+    const o = overlay("daycard", `<div class="big num">${ar(G.day)}</div><h2>${DAYN[(G.day - 1) % 5]} · الأسبوع ${ar(Math.ceil(G.day / 5))}</h2><p>${leftTxt}</p>${G.mode === "eng" && G.day > 10 ? `<p>المشروع: ${G.project}</p>` : ""}
+      <div class="count">${Array.from({ length: 10 }, (_, i) => `<span class="${i < cd ? "done" : ""}"></span>`).join("")}</div>${cond ? `<div class="cond"><b>${cond.n}</b><span>${cond.d}</span></div>` : ""}<div class="news">${(G.mode === "hr" ? NEWS_HR : NEWS)[(G.day - 1) % 10] || ""}</div>`);
     let done = false;
     const end = () => { if (done) return; done = true; o.remove(); res(); };
-    o.onclick = end; setTimeout(end, 2600);
+    o.onclick = end; setTimeout(end, cond ? 3400 : 2600);
   });
 };
 
@@ -2384,7 +2577,7 @@ UI.weekend = function () {
   const opts = weekendOpts();
   $("#layer").innerHTML = "";
   $("#game").innerHTML = `<div class="title-scr"><div class="scene-wrap">${ART.scene("istiraha", 3)}</div><div class="shade"></div>
-    <div class="title-body"><h1 class="logo" style="font-size:66px">الويكند</h1><p>خمسة أيام راحت، وباقي خمسة. وش تسوي بيومين؟</p>
+    <div class="title-body"><h1 class="logo" style="font-size:66px">الويكند</h1><p>أسبوع عمل كامل راح. وش تسوي بيومين؟</p>
     <div class="vn-opts" style="margin:0">${opts.map((o, i) => `<button class="opt" data-i="${i}">${o.t}</button>`).join("")}</div></div></div>`;
   $("#game").querySelectorAll(".opt").forEach(b => b.onclick = async () => {
     SND.play("select"); const r = doWeekend(+b.dataset.i);
@@ -2397,7 +2590,11 @@ UI.runLaunch = async function () {
   await sleep(400);
   await UI.runNode(G.mode === "hr" ? hrFinaleNode() : launchNode(), { event: true });
   busy = false;
-  UI.ending(pickEnding());
+  if (!G.sandbox) return UI.ending(pickEnding());
+  const k = pickEnding(); G.cycles = (G.cycles || []).concat(k); META.ends[k] = 1; saveMeta();
+  if (G.mode === "eng") { G.project = PROJECTS[G.cycles.length % PROJECTS.length]; G.prog = 0; G.capWarned = false; delete G.flags.consultant_credit; }
+  UI.toast(`${ENDS[k].h}<small>${G.mode === "hr" ? "ربع جديد يبدأ. الطلبات ما وقفت." : "مشروع جديد: " + G.project}</small>`, ART.icon("trophy"));
+  G.slot = slotOf(G.clock); save(); UI.beginSlot();
 };
 
 UI.ending = function (key) {
@@ -2421,25 +2618,28 @@ UI.ending = function (key) {
 
 UI.title = function () {
   const saved = loadSave(), live = saved && saved.phase !== "ending";
-  let mode = "eng";
+  let mode = "eng", sbx = false;
   const nEnds = Object.keys(META.ends).length;
   $("#layer").innerHTML = "";
   $("#game").innerHTML = `<div class="title-scr"><div class="scene-wrap">${ART.scene("roof", 3)}</div><div class="shade"></div>
     <div class="title-body"><h1 class="logo">دوام</h1><p>محاكي حياة موظف ساخر. عشرة أيام عمل، وناس كثير.</p>
-    ${live ? `<button class="btn" id="tCont">كمّل دوامك · ${saved.mode === "hr" ? "الموارد البشرية" : "الهندسة"} · اليوم ${ar(saved.day)}</button>` : ""}
+    ${live ? `<button class="btn" id="tCont">كمّل دوامك · ${saved.mode === "hr" ? "الموارد البشرية" : "الهندسة"}${saved.sandbox ? " · مفتوح" : ""} · اليوم ${ar(saved.day)}</button>` : ""}
     <div class="mode-pick" role="radiogroup" aria-label="اختر وظيفتك">
       <button class="on" data-m="eng" role="radio" aria-checked="true"><b>مهندس backend</b><span>إطلاق خلال ١٠ أيام</span></button>
       <button data-m="hr" role="radio" aria-checked="false"><b>الموارد البشرية<i class="new">جديد</i></b><span>طلبات الناس ومشاكلهم</span></button></div>
+    <button class="sbx" id="tSbx" aria-pressed="false"><i></i><span><b>وضع مفتوح</b>أيام ما تنتهي، وطلبات وأحداث تتولد كل يوم. تطلع بالاستقالة.</span></button>
     <input class="name-in" id="tName" maxlength="16" placeholder="اسمك في الشركة" aria-label="اسمك" value="${(saved && saved.name || "").replace(/"/g, "")}">
     <button class="btn ${live ? "ghost" : ""}" id="tNew">ابدأ أول يوم</button>
     <div class="small-print">${nEnds ? `اكتشفت ${ar(nEnds)} نهايات · ` : ""}فيه أصوات وموسيقى. الشركة والشخصيات خيالية.</div></div></div>`;
   document.querySelectorAll(".mode-pick button").forEach(b => b.onclick = () => { SND.init(); SND.play("click"); mode = b.dataset.m; document.querySelectorAll(".mode-pick button").forEach(x => { x.classList.toggle("on", x === b); x.setAttribute("aria-checked", x === b); }); });
-  $("#tNew").onclick = () => { SND.init(); SND.play("select"); clearSave(); G = fresh($("#tName").value.trim(), mode); save(); curLoc = null; UI.dayCard().then(UI.beginSlot); };
+  $("#tNew").onclick = () => { SND.init(); SND.play("select"); clearSave(); G = fresh($("#tName").value.trim(), mode, sbx); dayStart(); save(); curLoc = null; UI.dayCard().then(UI.beginSlot); };
+  $("#tSbx").onclick = e => { SND.init(); SND.play("click"); sbx = !sbx; e.currentTarget.setAttribute("aria-pressed", sbx); e.currentTarget.classList.toggle("on", sbx); };
   if (live) $("#tCont").onclick = () => { SND.init(); SND.play("select"); G = saved; UI.resume(); };
   SND.music("title"); SND.amb("roof");
 };
 UI.resume = function () {
   busy = false; setMode(G.mode || "eng");
+  if (G.clock == null) { G.clock = [450, 660, 825, 960][G.slot] || 450; G.genN = G.genN || {}; G.wkDone = G.wkDone || {}; G.project = G.project || PROJECTS[0]; STAFF_IDS.forEach(k => { if (G.aff[k] == null) G.aff[k] = 0; }); }
   if (G.phase === "weekend") return UI.weekend();
   if (G.phase === "ending") return UI.ending(G.endKey);
   UI.renderPlay();
@@ -2607,7 +2807,7 @@ UI.visit = async function (npc) {
   if (busy) return; busy = true;
   const o = vnOpen(), did = { talk: 0, ask: 0, gift: 0 };
   const tier = A(npc) < 0 ? 0 : A(npc) < 35 ? 1 : 2;
-  await say(o, parseLine(GREET[npc][tier], npc));
+  await say(o, parseLine(GREET[npc] ? GREET[npc][tier] : ["نعم؟", "h|هلا! تفضل.", "h|يا هلا والله!"][tier], npc));
   for (;;) {
     const items = [];
     if (!did.talk) items.push({ k: "talk", ic: "talk", t: hasNew(npc, curLoc) ? "سولف · عنده جديد" : "سولف" });
@@ -2616,7 +2816,7 @@ UI.visit = async function (npc) {
     items.push({ k: "bye", ic: "bye", t: did.talk || did.ask || did.gift ? "مع السلامة" : "رجوع" });
     const k = await hub(o, items);
     if (k === "bye") break;
-    if (k === "talk") { did.talk = 1; const n = pickTalk(npc, curLoc); if (n) await runVN(n, { o }); else await say(o, parseLine("ما عندي جديد. نتكلم بعدين.", npc)); }
+    if (k === "talk") { did.talk = 1; const n = pickTalk(npc, curLoc) || (CH[npc].staff ? staffTalk(npc) : null); if (n) await runVN(n, { o }); else await say(o, parseLine("ما عندي جديد. نتكلم بعدين.", npc)); }
     if (k === "ask") {
       const b = await pickPerson(o, npc);
       if (b) { did.ask = 1; const r = askAbout(npc, b); await say(o, { sp: "me", t: `وش رأيك في ${CH[b].n}؟` }); await say(o, parseLine(r.line, npc)); UI.renderHud(); }
@@ -2634,7 +2834,7 @@ UI.visit = async function (npc) {
   }
   closeVN(o);
   busy = false;
-  if (did.talk || did.ask || did.gift) { save(); UI.endSlot(); } else UI.renderPlay();
+  if (did.talk || did.ask || did.gift) { save(); UI.passTime(15 + did.talk * 25 + did.ask * 10 + did.gift * 10); } else UI.renderPlay();
 };
 
 /* ---------- chat (group events & phone threads) ---------- */
@@ -2750,7 +2950,7 @@ UI.phone = function (start) {
     const n = pickTalk("mom");
     SND.ring(true); await sleep(1400); SND.ring(false);
     if (n) await UI.runNode(n, { call: true });
-    busy = false; save(); UI.endSlot();
+    busy = false; save(); UI.passTime(25);
   }
   function log() {
     ph.innerHTML = `<div class="ph-head"><button class="x" id="phBack">${ART.icon("back")}</button><div><b>السجل</b><small>آخر الأحداث</small></div><button class="x" id="phX">${ART.icon("close")}</button></div>
@@ -2801,9 +3001,11 @@ UI.sheet = function (kind) {
     const row = (k, ic, t) => `<div class="set-row"><label>${ART.icon(ic)}${t}</label><button class="tog ${SET[k] ? "on" : ""}" data-k="${k}" role="switch" aria-checked="${!!SET[k]}" aria-label="${t}"></button></div>`;
     b.innerHTML = row("music", "music", "الموسيقى") + row("sfx", "sound", "المؤثرات والأصوات") + row("haptics", "vibe", "الاهتزاز") +
       `<div class="set-row"><label>${ART.icon("chat")}سرعة النص</label><div class="seg">${["بطيء", "عادي", "سريع"].map((t, i) => `<button data-s="${i}" class="${(SET.speed == null ? 1 : SET.speed) === i ? "on" : ""}">${t}</button>`).join("")}</div></div>
-      <div style="display:grid;gap:10px;margin-top:18px"><button class="btn ghost" id="sMenu">القائمة الرئيسية</button><button class="btn danger" id="sReset">ابدأ دوام جديد</button></div>`;
+      <div style="display:grid;gap:10px;margin-top:18px"><button class="btn ghost" id="sMenu">القائمة الرئيسية</button><button class="btn danger" id="sQuit">قدّم استقالتك</button><button class="btn danger" id="sReset">ابدأ دوام جديد</button></div>`;
     b.querySelectorAll(".tog").forEach(t => t.onclick = () => { const k = t.dataset.k; SET[k] = !SET[k]; t.classList.toggle("on", SET[k]); t.setAttribute("aria-checked", SET[k]); saveSet(); SND.init(); SND.apply(); SND.play("click"); if (k === "haptics" && SET.haptics) haptic(40); });
     b.querySelectorAll(".seg button").forEach(s => s.onclick = () => { SET.speed = +s.dataset.s; saveSet(); b.querySelectorAll(".seg button").forEach(x => x.classList.toggle("on", x === s)); SND.play("click"); });
+    b.querySelector("#sQuit").hidden = !(G && G.phase === "play");
+    b.querySelector("#sQuit").onclick = e => { const btn = e.currentTarget; if (btn.dataset.sure) { o.remove(); busy = false; UI.ending(pickEnding()); } else { btn.dataset.sure = 1; btn.textContent = "متأكد؟ النهاية تتحدد من وضعك الحالي"; SND.play("buzz"); } };
     b.querySelector("#sMenu").onclick = () => { save(); o.remove(); busy = false; UI.title(); };
     b.querySelector("#sReset").onclick = e => { const btn = e.currentTarget; if (btn.dataset.sure) { clearSave(); o.remove(); busy = false; UI.title(); } else { btn.dataset.sure = 1; btn.textContent = "متأكد؟ اضغط مرة ثانية"; SND.play("buzz"); } };
   }
